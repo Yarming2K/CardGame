@@ -149,7 +149,7 @@ kbd{display:inline-grid;place-items:center;min-width:20px;height:19px;padding:0 
 #bigMenu .chipb[aria-pressed="true"] small{color:inherit;opacity:.8}
 #bigMenu .eyebrow:not(:first-child){margin-top:4px}
 #bbCur{color:var(--muted);font-weight:700}
-#bbMenu{position:absolute;left:0;top:38px;z-index:6;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:auto repeat(5,auto);gap:6px 8px;padding:12px;width:330px}
+#bbMenu{position:absolute;left:0;top:38px;z-index:6;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:auto repeat(7,auto);gap:6px 8px;padding:12px;width:330px}
 #bbMenu .eyebrow{grid-row:1}
 #bbMenu .chipb{width:100%;justify-content:flex-start;text-align:left}
 #btray{position:absolute;left:var(--gl);top:86px;max-height:calc(100% - 150px);width:286px;display:flex;flex-direction:column;overflow:hidden}
@@ -261,23 +261,26 @@ kbd{display:inline-grid;place-items:center;min-width:20px;height:19px;padding:0 
             <button class="chipb" id="bigEx" aria-expanded="false" aria-controls="bigMenu">Big &amp; flying ▾</button>
             <div id="bigMenu" class="panel" role="group" aria-label="Big and flying blueprints" hidden>
               <p class="eyebrow">Big power</p>
-              <button class="chipb" data-bp="titan">Titan<small>A 130 t land battleship. A 12 MW reactor drives heavy tracks.</small></button>
+              <button class="chipb" data-bp="titan">Titan<small>A 100 t land battleship. Two bench-built power plants drive four tracks.</small></button>
               <p class="eyebrow">Things that fly</p>
-              <button class="chipb" data-bp="gunship">Gunship<small>A helicopter. A turbine turns a lift rotor.</small></button>
-              <button class="chipb" data-bp="jet">Jet<small>Two jets and a pair of wings. It needs a take-off run.</small></button>
-              <button class="chipb" data-bp="fortress">Sky fortress<small>A reactor turns two heavy rotors and lifts 300 t.</small></button>
+              <button class="chipb" data-bp="gunship">Gunship<small>A helicopter. A power plant turns a 7 m lift rotor.</small></button>
+              <button class="chipb" data-bp="jet">Jet<small>One jet and 24 m² of wing. It needs a 400 m take-off run.</small></button>
+              <button class="chipb" data-bp="tandem">Tandem lifter<small>Two rotors, each with its own power plant. Lifts 14 t.</small></button>
             </div>
           </div>
         </div>
         <div id="bbps" hidden>
           <button class="chipb" id="bbEx" aria-expanded="false" aria-controls="bbMenu">Examples <span id="bbCur"></span> ▾</button>
           <div id="bbMenu" class="panel" role="group" aria-label="Example parts" hidden>
-          <p class="eyebrow">Engines and power</p><p class="eyebrow">Magnets and weapons</p>
+          <p class="eyebrow">Engines and flight</p><p class="eyebrow">Magnets and weapons</p>
           <button class="chipb" data-bp="engine">Piston generator</button>
-          <button class="chipb" data-bp="rocket">Rocket motor</button>
-          <button class="chipb" data-bp="emag">Electromagnet</button>
           <button class="chipb" data-bp="twin">Twin engine</button>
           <button class="chipb" data-bp="big">Big engine</button>
+          <button class="chipb" data-bp="plant">Power plant</button>
+          <button class="chipb" data-bp="rocket">Rocket motor</button>
+          <button class="chipb" data-bp="jet">Jet engine</button>
+          <button class="chipb" data-bp="rotor">Lift rotor</button>
+          <button class="chipb" data-bp="emag">Electromagnet</button>
           <button class="chipb" data-bp="dyno">Magnet brake</button>
           <button class="chipb" data-bp="cannon">Cannon</button>
           <button class="chipb" data-bp="mg">Machine gun</button>
@@ -661,6 +664,10 @@ function groundAt(x,z){const d=Math.hypot(x,z);if(d<PAD_R)return -.02;const g=gr
     for(let c=0;c<3;c++){const v=clamp(lerp(sand[c],rock[c],hd)*k,0,255)/255;col[t*3+c]=col[t*3+3+c]=col[t*3+6+c]=v;}}
   g2.setAttribute('color',new THREE.BufferAttribute(col,3));g2.computeVertexNormals();
   const m=new THREE.Mesh(g2,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,metalness:0}));m.receiveShadow=true;scene.add(m);}
+{const S=8000,N=200,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,groundH(p.getX(i),p.getZ(i))-.6);
+  const g2=geo.toNonIndexed(),q=g2.attributes.position,col=new Float32Array(q.count*3),sand=[240,162,114],rock=[183,163,216];
+  for(let t=0;t<q.count;t+=3){const cy=(q.getY(t)+q.getY(t+1)+q.getY(t+2))/3,hd=sstep(5,18,cy),k=.9+hash2(Math.round(q.getX(t)*.1),Math.round(q.getZ(t)*.1))*.12;for(let c=0;c<3;c++){const v=clamp(lerp(sand[c],rock[c],hd)*k,0,255)/255;col[t*3+c]=col[t*3+3+c]=col[t*3+6+c]=v;}}
+  g2.setAttribute('color',new THREE.BufferAttribute(col,3));g2.computeVertexNormals();scene.add(new THREE.Mesh(g2,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,metalness:0})));}
 const ROCKS=[];
 {const rr=mulberry(7);for(let n=0;n<46;n++){const a=rr()*TAU,d=PAD_R+18+rr()*140,x=Math.sin(a)*d,z=Math.cos(a)*d,s=.5+rr()*1.7;
   if(Math.abs(x)<9&&z>PAD_R)continue;   // keep the firing lane clear
@@ -685,6 +692,8 @@ const BT={
   armor:{name:'Armor',paint:'panel',mass:.2,armor:2,desc:'The standard hull plate, in the same color as the game tank.'},
   heavy:{name:'Heavy armor',paint:'slate',mass:.45,armor:4,bolts:true,desc:'Thick bolted plate. It stops cannon fire, but every block costs speed.'},
   glass:{name:'Window',glass:true,paint:'mint',mass:.08,armor:.5,desc:'A window block. Glass shows what\u2019s inside.'},
+  skin:{name:'Airframe',paint:'white',mass:.025,armor:.2,desc:'A thin aluminum shell over light ribs, for things that fly. A quarter the weight of light armor, and it stops almost nothing.'},
+  wing:{name:'Wing panel',paint:'yel',mass:.012,armor:.1,wing:true,noShape:true,desc:'0.25 m\u00b2 of wing. Lay panels out flat beside the hull: every panel adds lift, and a long, slim wing wastes less to drag than a short, wide one.'},
   socket:{name:'Socket',paint:'steel',mass:.15,armor:1.5,socket:true,noShape:true,desc:'Parts plug in here. The top face takes turrets, engines, fuel and seats. Side faces take wheels, tracks and lights.'}
 };
 const SHAPES=['cube','slope','corner','tip'],SHN={cube:'Cube',slope:'Slope',corner:'Corner',tip:'Tip'},SHORI={cube:1,slope:12,corner:8,tip:8};
@@ -737,6 +746,7 @@ function edgeBeams(t,inset){const L=[],e=H-inset,len=G-2*inset+t;
 const LAT_GEO=mergeBoxes(edgeBeams(.03,.02));
 const FRAME_GEO=(()=>{const L=edgeBeams(.075,.04),e=H-.04,dl=(G-.08)*Math.SQRT2;
   L.push([.05,dl,.05,e,0,0,Math.PI/4,0,0],[.05,dl,.05,-e,0,0,-Math.PI/4,0,0],[dl,.05,.05,0,0,e,0,0,Math.PI/4],[dl,.05,.05,0,0,-e,0,0,-Math.PI/4]);return mergeBoxes(L);})();
+const WING_GEO=mergeBoxes([[G,.07,G*.42,0,0,G*.29],[G,.05,G*.3,0,-.004,-G*.07],[G,.026,G*.28,0,-.01,-G*.36]]);
 const MAT_LINE=new THREE.LineBasicMaterial({color:DK.navy,transparent:true,opacity:.3});
 const MAT_SEL=new THREE.LineBasicMaterial({color:0x7fe5d4,transparent:true,opacity:.95});
 const MAT_GHOST=new THREE.MeshBasicMaterial({color:0x7fe5d4,transparent:true,opacity:.36,depthWrite:false});
@@ -804,8 +814,8 @@ function roundGeo(Rm,Vm,r,n){const key=Rm+'|'+Vm+'|'+r.toFixed(3)+'|'+n;if(RGEO[
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();g.computeBoundingSphere();return RGEO[key]=g;}
 // 0 = open face (bevelled and rounded), 1 = partly covered (drawn square), 2 = hidden behind a full block
 function faceState(b){const st=[];for(let f=0;f<6;f++){const d=DIRS[f],n=BL.get(K(b.i+d[0],b.j+d[1],b.k+d[2]));
-  st.push(!n?0:(n.shape==='cube'&&n.type!=='frame'&&!BT[n.type].glass)?2:1);}return st;}
-function unitGeo(b,st){if(b.type==='frame')return{g:FRAME_GEO,key:'frame'};
+  st.push(!n?0:(n.shape==='cube'&&n.type!=='frame'&&n.type!=='wing'&&!BT[n.type].glass)?2:1);}return st;}
+function unitGeo(b,st){if(b.type==='frame')return{g:FRAME_GEO,key:'frame'};if(b.type==='wing')return{g:WING_GEO,key:'wing'};
   const S=shapeOf(b),R=st.reduce((m,v,f)=>v===0?m|(1<<f):m,0),V=st.reduce((m,v,f)=>v<2?m|(1<<f):m,0),bev=clamp(S.bevel,0,.5),rnd=clamp(S.round,0,1);
   if(b.shape!=='cube'||bev<.005){const g=shapeGeo(b.shape,b.ori,0);return{g,key:'p'+b.shape+b.ori};}
   if(rnd<.01){const m=bevMask(R),d=Math.min(bev,.45)*G;return{g:shapeGeo('cube',0,m,d),key:'c'+m+'|'+d};}
@@ -988,7 +998,7 @@ function addPart(key,b,face,rot,instant){const def=PD[key];
 function hugBay(p,cells){const carved=new Set(cells.map(c=>K(...c))),own=new Set(p.cells);
   // measured in the socket block's own frame, so a block still popping into place doesn't stretch it
   const t0=p.t;p.t=1;partPose(p);body.updateMatrixWorld(true);const box=new THREE.Box3(),bb=new THREE.Box3(),inv=new THREE.Matrix4().copy(p.b.g.matrixWorld).invert(),m=new THREE.Matrix4();
-  p.m.traverseVisible(o=>{if(!o.isMesh||o.userData.port)return;if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(m.multiplyMatrices(inv,o.matrixWorld));box.union(bb);});
+  p.m.traverseVisible(o=>{if(!o.isMesh||o.userData.port||o.userData.sweep)return;if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(m.multiplyMatrices(inv,o.matrixWorld));box.union(bb);});
   p.t=t0;partPose(p);box.translate(p.b.g.position).expandByScalar(.04);
   const corners=new Set();for(const c of cells)for(let n=0;n<8;n++)corners.add(K(c[0]+(n&1),c[1]+((n>>1)&1),c[2]+((n>>2)&1)));
   const moves=[];
@@ -1069,7 +1079,7 @@ function snap(){UNDO.push(serialize());if(UNDO.length>60)UNDO.shift();state.edit
 function undo(){if(!UNDO.length){toast('Nothing to undo.','');return;}loadDesign(UNDO.pop());toast('Undone.','');}
 function saveLocal(){try{localStorage.setItem('blockbay.v1',JSON.stringify({d:serialize(),bp:state.bp,edited:state.edited}));}catch(e){}}
 
-const BPN={tank:'Game tank',rover:'Rover',shaped:'Shaped scout',titan:'Titan',gunship:'Gunship',jet:'Jet',fortress:'Sky fortress',empty:'Empty pad'};
+const BPN={tank:'Game tank',rover:'Rover',shaped:'Shaped scout',titan:'Titan',gunship:'Gunship',jet:'Jet',tandem:'Tandem lifter',empty:'Empty pad'};
 function bpTank(){const b=[],p=[],top=[[0,-3,'turbine',0],[2,-3,'can',0],[-2,-3,'can',0],[-2,-2,'hatch',0],[2,-4,'rack2',0]],gk=PD.cpb_cannon?'cpb_cannon':null,ga=[0,0];
   if(gk)for(const [a,q] of PD[gk].foot.base)top.push([ga[0]+a,ga[1]+q,null,0]);
   for(let i=-2;i<=2;i++)for(let k=-4;k<=4;k++){
@@ -1085,41 +1095,45 @@ function bpRover(){const b=[],p=[],sock=new Set(['2,2','-2,2','2,-2','-2,-2','0,
   p.push(['wheel',2,1,2,0,0],['wheel',-2,1,2,1,0],['wheel',2,1,-2,0,0],['wheel',-2,1,-2,1,0],['cockpit',0,1,1,2,0],['piston',0,1,-2,2,0],[PD.cpb_mg?'cpb_mg':'mg',0,1,3,2,0],
     ['can',2,1,-3,2,0],['can',-2,1,-3,2,0],['lamp',1,1,3,4,0],['lamp',-1,1,3,4,0],['rack',2,1,2,2,0]);
   return{b,p,s:[[1,.14,0,null,null,'light']]};}
-/* ---------- big and flying blueprints ---------- */
+/* ---------- big and flying blueprints, built from the same blocks and bench parts as anything else ---------- */
 // a hull deck from i0..i1, k0..k1 at layer j: what(i,k) names the block, or null for none. Sockets get panel paint.
 function bpDeck(b,i0,i1,j,k0,k1,what){for(let i=i0;i<=i1;i++)for(let k=k0;k<=k1;k++){const t=what(i,k);if(!t)continue;const [type,shape,ori]=Array.isArray(t)?t:[t];b.push([i,j,k,type,shape||'cube',ori||0,type==='socket'?'panel':undefined,1,1]);}}
-// a built-in gun from the bench, if it's there, needs a patch of sockets under its mount plate
-function bpGun(key,i,k,socks,p,j,fb){const d=PD[key];if(!d){if(fb){socks.add(i+','+k);p.push([fb,i,j,k,2,0]);}return;}for(const [a,q] of d.foot.base||[[0,0]])socks.add((i+a)+','+(k+q));p.push([key,i,j,k,2,0]);}
-// the titan: a 13 × 21 block land battleship. A 12 MW reactor turns two heavy tracks through 4× shafts.
-function bpTitan(){const b=[],p=[],socks=new Set(['0,-6','-4,-1','6,-9','-6,-9']);
-  bpGun('cpb_cannon',0,3,socks,p,3,'turret');bpGun('cpb_mg',4,7,socks,p,3,'mg');bpGun('cpb_mg',-4,7,socks,p,3,'mg');
-  bpDeck(b,-6,6,2,-10,10,(i,k)=>(Math.abs(i)===6&&k===0)||(Math.abs(i)===3&&k===10)?'socket':Math.abs(i)<=5&&Math.abs(k)<=9?'frame':'heavy');
-  bpDeck(b,-6,6,3,-10,10,(i,k)=>k===10?['armor','slope',edgeIdx(0,1,1)]:socks.has(i+','+k)?'socket':(Math.abs(i)===6||k===-10)?'heavy':'armor');
-  p.push(['reactor',0,3,-6,2,0],['htrack',6,2,0,0,0],['htrack',-6,2,0,1,0],['hatch',-4,3,-1,2,0],['rack2',6,3,-9,2,0],['rack2',-6,3,-9,2,0],['lamp',3,2,10,4,0],['lamp',-3,2,10,4,0]);
+// a part from the bench stands on a patch of sockets under its mount plate; fb is a stand-in if the bench part is missing
+function bpPart(key,i,j,k,socks,p,fb){const d=PD[key];if(!d){if(fb){socks.add(i+','+k);p.push([fb,i,j,k,2,0]);}return;}for(const [a,q] of d.foot.base||[[0,0]])socks.add((i+a)+','+(k+q));p.push([key,i,j,k,2,0]);}
+// the titan: a 13 × 21 block land battleship, about 100 t. Two power plants drive four tracks.
+function bpTitan(){const b=[],p=[],socks=new Set(['-3,0','5,-1','-5,-1']);
+  bpPart('cpb_plant',-3,2,-6,socks,p,'turbine');bpPart('cpb_plant',3,2,-6,socks,p,'turbine');bpPart('cpb_cannon',0,2,3,socks,p,'turret');bpPart('cpb_mg',4,2,7,socks,p,'mg');bpPart('cpb_mg',-5,2,7,socks,p,'mg');
+  bpDeck(b,-6,6,1,-10,10,(i,k)=>(Math.abs(i)===6&&Math.abs(k)===5)||(Math.abs(i)===3&&k===10)?'socket':Math.abs(i)<=5&&Math.abs(k)<=9?'frame':'heavy');
+  bpDeck(b,-6,6,2,-10,10,(i,k)=>k===10?['armor','slope',edgeIdx(0,1,1)]:socks.has(i+','+k)?'socket':(Math.abs(i)===6||k===-10)?'heavy':'armor');
+  for(const k of [5,-5])p.push(['track',6,1,k,0,0],['track',-6,1,k,1,0]);
+  p.push(['hatch',-3,2,0,2,0],['rack2',5,2,-1,2,0],['rack2',-5,2,-1,2,0],['lamp',3,1,10,4,0],['lamp',-3,1,10,4,0]);
   return{b,p,s:[[1,.12,0,null,null,'armor']]};}
-// the gunship: a turbine turns a lift rotor through a 2× shaft. 900 kW lifts 22 t, and it weighs about 16 t.
-function bpGunship(){const b=[],p=[],socks=new Set(['0,-2','0,1','0,4','2,-2','-2,-2']);bpGun('cpb_mg',2,1,socks,p,1,'mg');
-  bpDeck(b,-2,2,0,-4,5,(i,k)=>Math.abs(i)===2&&Math.abs(k)===4?null:k===5?(Math.abs(i)===1?'socket':['light','slope',edgeIdx(0,-1,1)]):'light');
-  bpDeck(b,-2,2,1,-4,5,(i,k)=>socks.has(i+','+k)?'socket':'light');
-  bpDeck(b,0,0,1,-10,-5,()=> 'light');bpDeck(b,0,0,2,-10,-9,(i,k)=>k===-9?['light','slope',edgeIdx(0,1,1)]:'light');b.push([0,3,-10,'light','slope',edgeIdx(0,1,1),undefined,1,1]);
-  p.push(['turbine',0,1,-2,2,0],['rotor',0,1,1,2,0],['cockpit',0,1,4,2,0],['drum',2,1,-2,2,0],['drum',-2,1,-2,2,0],['lamp',1,0,5,4,0],['lamp',-1,0,5,4,0]);
-  return{b,p,s:[[1,.14,0,null,null,'light']]};}
-// the jet: two 45 kN jets and a pair of wings, on four free-rolling wheels. It lifts off at about 160 km/h.
-function bpJet(){const b=[],p=[],socks=new Set(['1,-4','-1,-4','0,0','0,-3','0,4']);
-  bpDeck(b,-1,1,1,-6,6,(i,k)=>(Math.abs(i)===1&&Math.abs(k)===3)?'socket':k===6?['light','slope',edgeIdx(0,-1,1)]:'light');
-  bpDeck(b,-1,1,2,-6,6,(i,k)=>(Math.abs(i)===1&&k===0)||socks.has(i+','+k)?'socket':k===6?['light','slope',edgeIdx(0,1,1)]:'light');
-  b.push([0,3,-6,'light','cube',0,undefined,1,1],[0,4,-6,'light','slope',edgeIdx(0,1,1),undefined,1,1]);
-  p.push(['jet',1,2,-4,2,0],['jet',-1,2,-4,2,0],['wing',1,2,0,0,0],['wing',-1,2,0,1,0],['drum',0,2,0,2,0],['drum',0,2,-3,2,0],['cockpit',0,2,4,2,0],
-    ['wheel',1,1,3,0,0],['wheel',-1,1,3,1,0],['wheel',1,1,-3,0,0],['wheel',-1,1,-3,1,0]);
-  return{b,p,s:[[1,.14,0,null,null,'light']]};}
-// the sky fortress: a 12 MW reactor turns two heavy rotors, one at each end, through 4× shafts. It lifts 300 t.
-function bpFortress(){const b=[],p=[],socks=new Set(['0,0','0,12','0,-12','3,-6','-4,-9','4,-9']);bpGun('cpb_cannon',0,6,socks,p,1,'turret');bpGun('cpb_mg',-4,-9,socks,p,1,'mg');bpGun('cpb_mg',4,-9,socks,p,1,'mg');
-  bpDeck(b,-5,5,0,-13,13,(i,k)=>Math.abs(i)===2&&k===13?'socket':Math.abs(i)<=4&&Math.abs(k)<=12?'light':'armor');
-  bpDeck(b,-5,5,1,-13,13,(i,k)=>socks.has(i+','+k)?'socket':Math.abs(k)===13?['armor','slope',edgeIdx(0,1,Math.sign(k))]:'armor');
-  p.push(['reactor',0,1,0,2,0],['hrotor',0,1,12,2,0],['hrotor',0,1,-12,2,0],['cockpit',3,1,-6,2,0],['lamp',2,0,13,4,0],['lamp',-2,0,13,4,0]);
-  return{b,p,s:[[1,.12,0,null,null,'armor']]};}
+// the gunship: an airframe hull, about 5.5 t. A 2.6 MW power plant turns a 7 m lift rotor through a 3× drive shaft: about 7 t of lift.
+function bpGunship(){const b=[],p=[],socks=new Set(['1,5','-1,5']);
+  bpPart('cpb_plant',0,1,-3,socks,p,'turbine');bpPart('cpb_rotor',0,1,1,socks,p);bpPart('cpb_mg',-2,1,1,socks,p,'mg');socks.add('0,4');
+  bpDeck(b,-2,2,0,-4,5,(i,k)=>Math.abs(i)===2&&Math.abs(k)>=4?null:k===5?(Math.abs(i)===1?'socket':['skin','slope',edgeIdx(0,-1,1)]):'skin');
+  bpDeck(b,-2,2,1,-4,5,(i,k)=>socks.has(i+','+k)&&k!==5?'socket':'skin');
+  bpDeck(b,0,0,1,-10,-5,()=>'skin');bpDeck(b,0,0,2,-10,-9,(i,k)=>k===-9?['skin','slope',edgeIdx(0,1,1)]:'skin');b.push([0,3,-10,'skin','slope',edgeIdx(0,1,1),undefined,1,1]);
+  p.push(['cockpit',0,1,4,2,0],['lamp',1,0,5,4,0],['lamp',-1,0,5,4,0]);
+  return{b,p,s:[[1,.14,0,null,null,'skin']]};}
+// the jet: about 7 t on 24 m² of wing. One 40 kN jet gets it to its 225 km/h take-off speed in about 400 m.
+function bpJet(){const b=[],p=[],socks=new Set(['0,4']);bpPart('cpb_jet',0,2,-3,socks,p);
+  bpDeck(b,-1,1,1,-7,7,(i,k)=>(Math.abs(i)===1&&Math.abs(k)===4)?'socket':k===7?['skin','slope',edgeIdx(0,-1,1)]:'skin');
+  bpDeck(b,-1,1,2,-7,7,(i,k)=>socks.has(i+','+k)?'socket':k===7?['skin','slope',edgeIdx(0,1,1)]:'skin');
+  // the wings, and a tailplane
+  for(const sd of [-1,1]){for(let n=2;n<=13;n++)for(let k=-2;k<=1;k++)b.push([sd*n,2,k,'wing','cube',0,undefined,1,1]);for(let n=2;n<=4;n++)b.push([sd*n,2,-7,'wing','cube',0,undefined,1,1]);}
+  b.push([0,3,-7,'skin','cube',0,undefined,1,1],[0,4,-7,'skin','slope',edgeIdx(0,1,1),undefined,1,1]);
+  p.push(['cockpit',0,2,4,2,0],['wheel',1,1,4,0,0],['wheel',-1,1,4,1,0],['wheel',1,1,-4,0,0],['wheel',-1,1,-4,1,0]);
+  return{b,p,s:[[1,.14,0,null,null,'skin']]};}
+// the tandem lifter: two lift rotors 8 m apart, each turned by its own power plant. About 11 t, with 14 t of lift.
+function bpTandem(){const b=[],p=[],socks=new Set(['1,12','-1,12']);
+  for(const sd of [1,-1]){bpPart('cpb_rotor',0,1,sd*8-(sd<0?1:0),socks,p);bpPart('cpb_plant',0,1,sd*3+(sd<0?-1:0),socks,p,'turbine');}bpPart('cpb_mg',-2,1,10,socks,p,'mg');socks.add('2,10');
+  bpDeck(b,-2,2,0,-11,12,(i,k)=>Math.abs(i)===2&&Math.abs(k)>=11?null:k===12?(Math.abs(i)===1?'socket':['skin','slope',edgeIdx(0,-1,1)]):'skin');
+  bpDeck(b,-2,2,1,-11,12,(i,k)=>socks.has(i+','+k)&&k!==12?'socket':k===-11?['skin','slope',edgeIdx(0,1,-1)]:'skin');
+  p.push(['hatch',2,1,10,2,0],['lamp',1,0,12,4,0],['lamp',-1,0,12,4,0]);
+  return{b,p,s:[[1,.14,0,null,null,'skin']]};}
 function loadBlueprint(name,keepUndo){if(!keepUndo&&BL.size)snap();
-  const d=name==='tank'?bpTank():name==='rover'?bpRover():name==='shaped'?bpShaped():name==='titan'?bpTitan():name==='gunship'?bpGunship():name==='jet'?bpJet():name==='fortress'?bpFortress():{b:[],p:[]};loadDesign(d);state.bp=name;state.edited=false;
+  const d=name==='tank'?bpTank():name==='rover'?bpRover():name==='shaped'?bpShaped():name==='titan'?bpTitan():name==='gunship'?bpGunship():name==='jet'?bpJet():name==='tandem'?bpTandem():{b:[],p:[]};loadDesign(d);state.bp=name;state.edited=false;
   for(const el of document.querySelectorAll('#bps [data-bp]'))el.setAttribute('aria-pressed',String(el.dataset.bp===name));bigMark(name);
   if(state.compare)showCompare(true);dirty=true;}
 
@@ -1239,37 +1253,59 @@ const now=()=>performance.now()/1000;
 /* =========================================================
    READOUT — what the design adds up to
    ========================================================= */
+/* ---------- physics: real forces, in newtons, on the vehicle's mass in kg ----------
+   On the ground, the drive pushes with its power over its speed, never harder than the tracks or tyres can grip;
+   rolling resistance, air drag and slopes push back. In the air, rotors lift by momentum theory, wings by the
+   lift equation (they stall past their best angle), and everything drags with the square of its speed. */
+const PHY={eta:.85,crr:{track:.08,wheel:.035},mu:{track:.8,wheel:.65,skid:.5},cdBody:.85,cdDisc:.06,cdSide:1.1,cdTop:1.1,cd0Wing:.012,eWing:.8,clMax:1.35,tiltMax:.3,bankMax:.7,climb:6};
+// the hull's size, for drag, and its wings: area, span and aspect ratio
+function aeroOf(){const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];let nw=0,w0=1e9,w1=-1e9;
+  for(const b of BL.values()){if(BT[b.type].wing){nw++;w0=Math.min(w0,b.i);w1=Math.max(w1,b.i);continue;}const c=[b.i,b.j,b.k];for(let a=0;a<3;a++){mn[a]=Math.min(mn[a],c[a]);mx[a]=Math.max(mx[a],c[a]);}}
+  if(mn[0]>mx[0])return{W:0,Hh:0,L:0,Af:0,Atop:0,Aside:0,S:0,span:0,AR:0};
+  const W=(mx[0]-mn[0]+1)*G,Hh=(mx[1]-mn[1]+1)*G,L=(mx[2]-mn[2]+1)*G,S=nw*G*G,span=nw?(w1-w0+1)*G:0;
+  return{W,Hh,L,Af:W*Hh,Atop:W*L,Aside:L*Hh,S,span,AR:S>0?Math.max(1.5,span*span/S):0};}
+// the largest speed in [lo, 400] m/s where a net force is still pushing forward
+function solveV(force,lo){lo=lo||.5;if(force(lo)<=0)return 0;let hi=400;if(force(hi)>0)return hi;for(let i=0;i<40;i++){const mid=(lo+hi)/2;if(force(mid)>0)lo=mid;else hi=mid;}return lo;}
+const liftSlope=(AR)=>2*Math.PI*AR/(AR+2);   // how fast a wing's lift grows with its angle, per radian
+const wingDrag=(v,S,AR,W)=>S>0&&v>1?.5*RHO*v*v*S*PHY.cd0Wing+W*W/(.5*RHO*v*v*S*Math.PI*AR*PHY.eWing):0;   // profile drag plus the drag of making lift W
 function analyze(){let mass=0,arm=0,na=0,nb=0,unw=0;for(const b of BL.values()){const T=BT[b.type];mass+=T.mass*blockVol(b)/(G*G*G);const w=[0,1,2,4,5].reduce((s,f)=>s+(b.fm&(1<<f)?1:0),0);arm+=T.armor*w;na+=w;nb++;if(b.weld<1)unw++;}
   // the network decides what runs: an engine needs a fuel hose, a wheel needs a drive shaft
-  const N=netSolve(),guns=[];let power=Math.round(N.power),fuel=Math.round(N.fuel),ctl=0,tracks=0,wheels=0,rotors=0,lift=0,rotR=0,wingK=0,hthr=0,vthr=0,gpow=0,cannon=0,mg=0,thrust=0,vents=0,rockets=0,kicks=0;const sides=new Set(),dsides=new Set(),sealed=[],blocked=[],loose=[];
+  const N=netSolve(),guns=[];let power=Math.round(N.power),fuel=Math.round(N.fuel),ctl=0,tracks=0,wheels=0,rotors=0,rotT=0,rotR=0,disc=0,jfuel=0,hthr=0,vthr=0,gpow=0,cannon=0,mg=0,thrust=0,vents=0,rockets=0,kicks=0;const sides=new Set(),dsides=new Set(),sealed=[],blocked=[],loose=[];
   for(const p of PARTS){const d=p.def;mass+=d.mass;if(d.control&&p.dmg!=='out')ctl++;if(d.weapon==='cannon')cannon++;if(d.weapon==='mg')mg++;if(d.weapon==='gun')guns.push(d.name+(p.dmg==='out'?' (out)':''));
     const ff=isEng(d)?(N.ff.get(p)||0):1;p.runs=ff>0;if(p.runs)thrust+=d.thrust||0;
-    if(d.drive==='rotor'){rotors++;lift+=d.lift*Math.min(1,(N.dflow.get(p)||0)/d.lpow);rotR=Math.max(rotR,d.sweep.r);}
+    if(d.drive==='rotor'){rotors++;disc+=Math.PI*d.rotor.R*d.rotor.R;if(p.dmg!=='out')rotT+=rotorThrust(Math.min(N.dflow.get(p)||0,d.rotor.cap),d.rotor.R,d.rotor.fm);rotR=Math.max(rotR,d.rotor.R);}
     else if(d.drive){if(d.drive==='track')tracks++;else wheels++;sides.add(p.face);gpow+=N.dflow.get(p)||0;if((N.dflow.get(p)||0)>1)dsides.add(p.face);}
-    if(d.wing)wingK+=d.wing;
+    if(d.thrust>0&&d.fuel>0&&!d.power)jfuel+=d.fuel;
     if(d.thrust>0&&p.runs&&p.dmg!=='out'){const th=mountTheta(d,p.face,p.rot),td=d.tdir||[0,0,0];hthr+=d.thrust*Math.max(0,-td[0]*Math.sin(th)+td[2]*Math.cos(th));vthr+=d.thrust*Math.max(0,td[1]);}
     if(d.vent){vents++;if(!ventOpen(p))sealed.push(p);}
     if(d.plume){rockets++;if(plumeBlocked(d,p.b,p.face,p.rot))blocked.push(p);}
     if(d.kick>0){kicks++;p.hold=holdOf(p);if(d.kick>p.hold)loose.push(p);}}
-  const drive=(tracks>=2||wheels>=3)&&sides.size>=2,driven=dsides.size>=2,cap=tracks?11:wheels?30:0,pm=mass>0?gpow/mass:0;
-  const F=flightOf(mass,lift,vthr,hthr,wingK,tracks+wheels>0);
-  const vmax=Math.min(cap,3.1*Math.sqrt(pm)),use=power/1500,range=use>0?fuel/use*vmax*.7/1000:0;
+  const drive=(tracks>=2||wheels>=3)&&sides.size>=2,driven=dsides.size>=2,groundOK=drive&&driven&&gpow>1;
+  // top speed is where the drive's push meets rolling resistance and drag, unless the gearing tops out first
+  const AE=aeroOf(),mk=Math.max(200,mass*1000),gear=tracks?'track':wheels?'wheel':null,crr=PHY.crr[gear||'wheel'],mu=PHY.mu[gear||'skid'],CdA=PHY.cdBody*AE.Af+AE.S*PHY.cd0Wing,vcap=tracks?11:wheels?30:0;
+  const fGround=(v,P,T)=>Math.min(P*1000*PHY.eta/Math.max(v,.5),mu*mk*GRAV)+T-crr*mk*GRAV-.5*RHO*CdA*v*v;
+  const vmax=groundOK?Math.min(vcap,solveV(v=>fGround(v,gpow,0))):0;
+  const F=flightOf(mk,AE,rotT,vthr*1000,hthr*1000,gear,gpow,fGround,disc);
+  // fuel: an engine turns about 30% of its fuel's 30 MJ/kg into work, so 1 MW burns a litre every 9 s
+  const use=power/9000,range=use>0?fuel/(use*.6)*(groundOK?vmax:F.vair)*.7/1000:0;
   const avg=na?arm/na:0,armT=avg>=3?'Heavy':avg>=1.6?'Medium':avg>0?'Light':'None';
-  const groundOK=drive&&driven&&gpow>1;
-  return{nb,unw,np:PARTS.length,mass,power,fuel,ctl,tracks,wheels,cannon,mg,guns,drive,driven,dpow:gpow,net:N,groundOK,rotors,rotR,wingK,hthr,vthr,...F,vmax,range,armT,acc:Math.min(6,.09*pm),thrust,vents,rockets,kicks,sealed,blocked,loose,
-    ready:ctl>0&&(power>0||hthr+vthr>0)&&fuel>0&&(groundOK||F.canFly)&&unw===0&&nb>0&&!sealed.length&&!blocked.length};}
-// can it fly? Rotors and upward rockets lift on the spot; wings lift with air speed, which jets supply
-function flightOf(mass,lift,vthr,hthr,wingK,gear){const m=Math.max(.2,mass),liftT=lift+vthr/9.8,aJ=hthr/m;
-  const aRotF=lift>0?Math.min(6,Math.max(0,liftT*9.8/m-9.8)*.5+2.5):0,vair=Math.sqrt((aRotF+aJ)/FLY_CD);
-  const hover=mass>0&&liftT>=mass*1.02,glide=mass>0&&gear&&aJ>0&&wingK>0&&liftT+wingK*vair*vair*.9>=mass*1.02;
-  return{liftT,vair:liftT>=mass*1.02||wingK>0?vair:0,vto:wingK>0?Math.sqrt(Math.max(0,mass-liftT)/wingK):0,hover,canFly:hover||glide,flyer:lift>0||wingK>0||vthr>0||(hthr>0&&wingK>0)};}
+  return{nb,unw,np:PARTS.length,mass,power,fuel,jfuel,ctl,tracks,wheels,cannon,mg,guns,drive,driven,dpow:gpow,net:N,groundOK,rotors,rotR,hthr,vthr,...F,vmax,vcap,mu,crr,CdA,range,armT,thrust,vents,rockets,kicks,sealed,blocked,loose,
+    ready:ctl>0&&(power>0||hthr+vthr>0)&&fuel+jfuel>0&&(groundOK||F.canFly)&&unw===0&&nb>0&&!sealed.length&&!blocked.length};}
+// can it fly? Rotors and rockets that point up lift on the spot. Wings lift with air speed, which jets give them on a take-off run.
+function flightOf(mk,AE,rotT,Tv,Tj,gear,gpow,fGround,disc){const W=mk*GRAV,liftN=rotT+Tv,hover=liftN>=W*1.03;
+  const vto=AE.S>0?Math.sqrt(2*Math.max(0,W-liftN)/(RHO*AE.S*PHY.clMax*.9)):0,vroll=gear&&Tj>0?solveV(v=>fGround(v,gpow,Tj)):0;
+  const glide=AE.S>0&&!!gear&&Tj>0&&vroll>=vto,canFly=hover||glide;
+  // in the air: jets push, and a rotor can lean its spare lift forward
+  const Frot=rotT>0?Math.min(Math.sqrt(Math.max(0,rotT*rotT-W*W)),W*Math.tan(PHY.tiltMax)):0,body=.5*RHO*(PHY.cdBody*AE.Af+PHY.cdDisc*(disc||0));
+  const vair=!canFly?0:hover?solveV(v=>Frot+Tj-body*v*v-.5*RHO*v*v*AE.S*PHY.cd0Wing):solveV(v=>Tj-body*v*v-wingDrag(v,AE.S,AE.AR,W),Math.max(vto,1));
+  return{liftT:liftN/GRAV/1000,rotT,Tv,Tj,disc:disc||0,hover,glide,canFly,vto,vroll,vair,flyer:rotT>0||AE.S>0||Tv>0,AE};}
 function updateReadout(){const A=analyze();
   $('#vName').textContent=(BPN[state.bp]||'Your design')+(state.edited&&state.bp!=='empty'?' · edited':state.bp==='empty'&&A.nb?' · your design':'');
   const row=(k,v)=>`<dt>${k}</dt><dd>${v}</dd>`;
   $('#stats').innerHTML=row('Blocks',A.unw?`${A.nb} · ${A.unw} unwelded`:A.nb)+row('Parts',A.np)+row('Mass',`${A.mass.toFixed(1)} t`)+row('Power',A.power?`${A.power} kW`:'–')+(A.power&&(A.tracks||A.wheels)?row(A.tracks?'To the tracks':'To the wheels',`${Math.round(A.dpow)} kW`):'')+
-    row('Top speed',A.vmax>0&&A.groundOK?`${Math.round(A.vmax*3.6)} km/h`:'–')+(A.flyer?row('Lift',A.liftT>0?`${A.liftT.toFixed(A.liftT<10?1:0)} t · ${Math.round(A.liftT/Math.max(.1,A.mass)*100)}% of its weight`:A.wingK>0?'from the wings':'–')+(A.canFly?row('Air speed',`${Math.round(A.vair*3.6)} km/h`):''):'')+row('Fuel',A.fuel?`${A.fuel} L`:'–')+row('Range',A.range>0?`${A.range.toFixed(1)} km`:'–')+row('Armor',A.armT)+
+    row('Top speed',A.vmax>0&&A.groundOK?`${Math.round(A.vmax*3.6)} km/h`:'–')+(A.flyer?(A.liftT>0?row('Lift',`${A.liftT.toFixed(A.liftT<10?1:0)} t · ${Math.round(A.liftT/Math.max(.1,A.mass)*100)}% of its weight`):'')+(A.AE.S>0?row('Wings',`${A.AE.S.toFixed(A.AE.S<10?2:1)} m² · lift off at ${Math.round(A.vto*3.6)} km/h`):'')+(A.canFly?row('Air speed',`${Math.round(A.vair*3.6)} km/h`):''):'')+row('Fuel',A.fuel||A.jfuel?[A.fuel?`${A.fuel} L`:'',A.jfuel?`${Math.round(A.jfuel)} kg in the jets`:''].filter(Boolean).join(' · '):'–')+row('Range',A.range>0?`${A.range.toFixed(1)} km`:'–')+row('Armor',A.armT)+
     row('Weapons',[A.cannon?`${A.cannon} cannon`:'',A.mg?`${A.mg} MG`:'',...A.guns].filter(Boolean).join(' · ')||'–')+(A.net&&[...A.net.ammo.values()].some(r=>r.length)?row('Spare rounds',[...new Set([...A.net.ammo.values()].flat())].reduce((s,r)=>s+r.def.rack.n,0)):'')+(A.thrust>0?row(A.flyer?'Thrust':'Boost',`${A.thrust.toFixed(1)} kN`):'');
-  const nm=(p)=>p.def.name.toLowerCase(),ck=[[A.ctl>0,'A seat to drive from'],[A.net.eng.length>0,'An engine'],[A.fuel>0,'Fuel'],A.flyer?[A.groundOK||A.canFly,'Wheels or tracks on both sides, or lift to fly']:[A.drive,'Wheels or tracks on both sides'],[A.unw===0&&A.nb>0,'Every block welded']].map(([ok,t])=>({s:ok?'ok':'no',t}));
+  const nm=(p)=>p.def.name.toLowerCase(),ck=[[A.ctl>0,'A seat to drive from'],[A.net.eng.length>0,'An engine'],[A.fuel+A.jfuel>0,'Fuel'],A.flyer?[A.groundOK||A.canFly,'Wheels or tracks on both sides, or lift to fly']:[A.drive,'Wheels or tracks on both sides'],[A.unw===0&&A.nb>0,'Every block welded']].map(([ok,t])=>({s:ok?'ok':'no',t}));
   ck.push(...netChecks(A));
   if(A.flyer)ck.push(flightCheck(A));
   if(A.vents)ck.push(A.sealed.length?{s:'no',t:`Air: the ${nm(A.sealed[0])} is sealed in. Leave a cell open beside or above it.`}:{s:'ok',t:'Air for every engine'});
@@ -1279,19 +1315,19 @@ function updateReadout(){const A=analyze();
   const bd=$('#bDrive');bd.disabled=!A.ready;bd.textContent=A.ready?(A.canFly?'Test flight':'Test drive'):A.flyer&&!A.canFly&&!A.groundOK&&A.unw===0?'Not enough lift to fly':A.unw&&A.nb?'Weld first, then drive':A.net.eng.length&&A.power<=0?'No fuel reaches the engine':A.power>0&&A.drive&&!A.driven?'The wheels aren\u2019t driven':A.sealed.length?'An engine can’t breathe':A.blocked.length?'An exhaust is blocked':'Not ready to drive';
   $('#bWeld').classList.toggle('on',A.unw>0);return A;}
 
-function flightCheck(A){const t=(x)=>x.toFixed(x<10?1:0);
-  if(A.canFly)return{s:'ok',t:A.hover?`Flight: ${t(A.liftT)} t of lift for ${t(A.mass)} t, so it can hover`:`Flight: the wings lift it off at ${Math.round(A.vto*3.6)} km/h`};
+function flightCheck(A){const t=(x)=>x.toFixed(x<10?1:0),kmh=(v)=>Math.round(v*3.6);
+  if(A.canFly)return{s:'ok',t:A.hover?`Flight: ${t(A.liftT)} t of lift for ${t(A.mass)} t, so it can hover`:`Flight: it lifts off at ${kmh(A.vto)} km/h, and reaches ${kmh(A.vroll)} km/h on the runway`};
   const s=A.groundOK?'warn':'no';
-  if(A.rotors&&!A.wingK)return{s,t:`Lift: the rotors give ${t(A.liftT)} t, but it weighs ${t(A.mass)} t. Give them more power with drive shafts, add rotors, or build lighter.`};
-  if(A.wingK){if(!A.hthr)return{s,t:'Wings: they need a jet to push them through the air.'};if(!A.tracks&&!A.wheels)return{s,t:'Wings: they need wheels or tracks to take off on.'};
-    return{s,t:`Wings: at its top speed of ${Math.round(A.vair*3.6)} km/h they lift ${t(A.liftT+A.wingK*A.vair*A.vair*.9)} t of its ${t(A.mass)} t. Add jets or wings, or build lighter.`};}
+  if(A.rotors&&!A.AE.S)return{s,t:`Lift: the rotors give ${t(A.liftT)} t, but it weighs ${t(A.mass)} t. Give them more power, use longer blades, or build lighter (airframe blocks weigh a quarter of light armor).`};
+  if(A.AE.S){if(!A.Tj)return{s,t:'Wings: they need a jet to push them through the air.'};if(!A.tracks&&!A.wheels)return{s,t:'Wings: they need wheels or tracks to take off on.'};
+    return{s,t:`Wings: it needs ${kmh(A.vto)} km/h to lift off, but only reaches ${kmh(A.vroll)} km/h on the runway. Add wing panels or jets, or build lighter.`};}
   return{s,t:`Lift: its rockets lift ${t(A.liftT)} t of its ${t(A.mass)} t.`};}
 
 /* =========================================================
    TRAY, OPTIONS, HINT
    ========================================================= */
 // weapons aren't preset: every gun, the tank's cannon included, is built from pieces on the part bench
-const TRAY={blocks:['frame','light','armor','heavy','glass','socket'],parts:['piston','turbine','can','drum','cockpit','hatch','wheel','track','track2','lamp'],tools:['box','shape','remove','weld','paint']};
+const TRAY={blocks:['frame','light','armor','heavy','glass','skin','wing','socket'],parts:['piston','turbine','can','drum','cockpit','hatch','wheel','track','track2','lamp'],tools:['box','shape','remove','weld','paint']};
 const TOOLS={remove:{name:'Remove',desc:'Take off a block or a part. Parts on a removed socket come off with it.'},
   weld:{name:'Welder',desc:'Hold the mouse on placed blocks to weld them solid. New blocks start as bare frames, like Space Engineers.'},
   paint:{name:'Paint',desc:'Recolor a block. Paint changes only the look.'}};
@@ -1306,7 +1342,7 @@ function makeThumbs(){let r;try{r=new THREE.WebGLRenderer({antialias:true,alpha:
   const shot=(obj,key)=>{S.add(obj);obj.updateMatrixWorld(true);box.setFromObject(obj);box.getBoundingSphere(sph);const D=sph.radius/Math.sin(15*Math.PI/180)*1.02;
     cam.position.set(sph.center.x+D*.62,sph.center.y+D*.42,sph.center.z+D*.66);cam.lookAt(sph.center);r.render(S,cam);THUMB[key]=r.domElement.toDataURL('image/png');S.remove(obj);};
   for(const k of TRAY.blocks){const g=new THREE.Group(),T=BT[k];
-    if(k==='frame')fa(g,FRAME_GEO,fmat(PAINT.navy));else{fa(g,shapeGeo('cube',0,4095),T.glass?vGlass:fmat(PAINT[T.paint]));const f={type:k,fm:63-8,mounts:{}};const dk=decoFor(f);if(dk)g.add(dk.clone());}
+    if(k==='frame')fa(g,FRAME_GEO,fmat(PAINT.navy));else if(k==='wing')fa(g,WING_GEO,fmat(PAINT.yel));else{fa(g,shapeGeo('cube',0,4095),T.glass?vGlass:fmat(PAINT[T.paint]));const f={type:k,fm:63-8,mounts:{}};const dk=decoFor(f);if(dk)g.add(dk.clone());}
     shot(g,k);}
   for(const k of TRAY.parts){const g=new THREE.Group(),r2={};PD[k].build(g,r2);if(PD[k].mount==='side')g.rotation.y=-.6;shot(g,k);}
   for(const s of SHAPES){const g=new THREE.Group();fa(g,shapeGeo(s,s==='slope'?edgeIdx(0,1,1):s==='corner'?CORN.findIndex(c=>c[0]===1&&c[1]===1&&c[2]===1):CORN.findIndex(c=>c[0]===-1&&c[1]===-1&&c[2]===-1),0),fmat(DK.panel));shot(g,'sh_'+s);}
@@ -1403,7 +1439,7 @@ $('#opts').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 function turn(){if(state.cat==='part'){state.rot=(state.rot+1)%4;}else if(state.cat==='block'&&state.shape!=='cube'){const cur=hov&&hov.kind==='block'?hov.ori:state.ori;state.ori=(cur+1)%SHORI[state.shape];state.oriAuto=false;}renderOpts();refreshHover();}
 function cycleShape(){if(state.cat!=='block'||BT[state.sel].noShape)return;state.shape=SHAPES[(SHAPES.indexOf(state.shape)+1)%SHAPES.length];state.oriAuto=true;renderOpts();refreshHover();}
 // the big and flying blueprints live in a menu, so the top bar stays one row
-const BIG=['titan','gunship','jet','fortress'];
+const BIG=['titan','gunship','jet','tandem'];
 function bigMenu(on){$('#bigMenu').hidden=!on;$('#bigEx').setAttribute('aria-expanded',String(on));}
 function bigMark(name){$('#bigEx').setAttribute('aria-pressed',String(BIG.includes(name)));}
 $('#bigEx').addEventListener('click',e=>{e.stopPropagation();bigMenu($('#bigMenu').hidden);});
@@ -1785,7 +1821,7 @@ const MAT={
 const FUEL={C:{name:'Charcoal',mj:30,ve:900,col:0x5b5470},S:{name:'Sulfur',mj:9,ve:600,col:0xffe066},H:{name:'Hydrogen',mj:120,ve:2600,col:0xc9e8ff}};
 const OXI={KNO3:{name:'Saltpeter',k:1,col:0xefe9ff},O:{name:'Oxygen',k:1.25,col:0x9fd8ff}};
 const QROLL=[['Low',.7],['Standard',1],['Fine',1.2],['Rich',1.45],['Exceptional',1.7]];
-const PT={F:{n:'Fuel',c:0xff8a65},O:{n:'Oxidizer',c:0x9fd8ff},E:{n:'Power',c:0x78c3e2},M:{n:'Motion',c:0xffcf4a},H:{n:'Heat',c:0xff5d73},C:{n:'Core',c:0xb9c4cf},S:{n:'Mount',c:0xdfe5ec},G:{n:'Bore',c:0xb388ff},A:{n:'Ammo',c:0x9df29a}};
+const PT={F:{n:'Fuel',c:0xff8a65},O:{n:'Oxidizer',c:0x9fd8ff},E:{n:'Power',c:0x78c3e2},M:{n:'Motion',c:0xffcf4a},H:{n:'Heat',c:0xff5d73},C:{n:'Core',c:0xb9c4cf},S:{n:'Mount',c:0xdfe5ec},G:{n:'Bore',c:0xb388ff},A:{n:'Ammo',c:0x9df29a},R:{n:'Blade',c:0xc4d3ea}};
 const mc=(m)=>(MAT[m]||MAT.Fe).col;
 const N=(p,d,t,g,z)=>({p,d,t,g:g||0,z:z||0});
 // rounds: powder shells are fired by a spark at the breech; iron slugs are pulled down the barrel by coil stages
@@ -1928,10 +1964,38 @@ const PCS={
   cap:{name:'Capacitor',cat:'power',mats:['Al','Cu'],def:'Al',vol:.8,
     desc:'Stores a burst of power and lets it all go at once. Coil stages need one, because a battery can\u2019t push power out fast enough. It recharges between shots.',
     nodes:[N([0,0,0],[0,-1,0],'S'),N([0,.16,0],[0,1,0],'E'),N([.05,.08,0],[1,0,0],'E')],
-    build:(g,m,c,r)=>{dkC(g,.045,.045,.15,14,DK.mint,0,.075,0);dkC(g,.047,.047,.02,14,mc(m),0,.15,0);dkC(g,.047,.047,.012,14,DK.navy,0,.006,0);r.bar=dkRig(g,0,.02,.046);dkB(r.bar,.012,.1,.004,DK.yel,0,.05,0);}}
+    build:(g,m,c,r)=>{dkC(g,.045,.045,.15,14,DK.mint,0,.075,0);dkC(g,.047,.047,.02,14,mc(m),0,.15,0);dkC(g,.047,.047,.012,14,DK.navy,0,.006,0);r.bar=dkRig(g,0,.02,.046);dkB(r.bar,.012,.1,.004,DK.yel,0,.05,0);}},
+  /* ---------- flight: rotors are a hub and blades; a jet is a rocket chamber that breathes air ---------- */
+  hub:{name:'Rotor hub',cat:'flight',mats:['Fe','Al','W'],def:'Fe',vol:.7,turns:[2,3,4,5],
+    desc:'Spins blades from a motion input on its side. Every blade on it adds lift and how much power it can take. On a vehicle, leave the motion port open and join it to an engine with a drive shaft.',
+    nodes:[N([0,0,0],[0,-1,0],'S'),N([.07,.045,0],[1,0,0],'M'),N([.055,.12,0],[1,0,0],'R'),N([-.055,.12,0],[-1,0,0],'R'),N([0,.12,.055],[0,0,1],'R'),N([0,.12,-.055],[0,0,-1],'R'),N([0,.155,0],[0,1,0],'S')],
+    build:(g,m,c,r)=>{dkB(g,.13,.09,.13,DK.navy,0,.045,0);dkB(g,.134,.016,.134,mc(m),0,.08,0,0,0,0,true);dkC(g,.026,.026,.02,10,DK.yel,.065,.045,0,0,0,Math.PI/2);dkC(g,.018,.022,.03,8,DK.metal,0,.098,0);
+      r.spin=dkRig(g,0,.12,0);dkC(r.spin,.05,.05,.03,14,mc(m),0,0,0);for(let k=0;k<4;k++)dkB(r.spin,.022,.026,.022,DK.yel,Math.cos(k*Math.PI/2)*.045,0,Math.sin(k*Math.PI/2)*.045,0,0,0,true);dkS(r.spin,.022,DK.coral,0,.024,0,true);}},
+  blade:{name:'Rotor blade',cat:'flight',mats:['Al','Fe','W'],def:'Al',vol:.9,len:1.1,
+    desc:'A 1.1 m blade (2.2 m at 2\u00d7, 3.3 m at 3\u00d7) that plugs into a rotor hub. Longer blades sweep more air, so the same power lifts more. Each blade takes only so much power before it flies apart: aluminum the least, tungsten the most.',
+    nodes:[N([0,0,0],[-1,0,0],'R')],
+    // the blade's sweep isn't counted in its box, so it can hang off the bench and over a vehicle's deck
+    build:(g,m)=>{const L=1.1;dkB(g,.07,.035,.05,DK.navy,.035,0,0);const b=fg(g,0,0,0,.08,0,0);dkB(b,L-.12,.012,.085,mc(m),.07+(L-.12)/2,0,0);dkB(b,.1,.014,.087,DK.yel,L-.05,0,0,0,0,0,true);
+      g.traverse(o=>{if(o.isMesh)o.userData.sweep=true;});}},
+  intake:{name:'Air intake',cat:'flight',mats:['Al','Fe'],def:'Al',vol:.4,
+    desc:'Feeds air to a rocket chamber\u2019s oxidizer port, which makes it a jet. A jet burns only fuel, and pushes much harder for the fuel it burns than a rocket does.',
+    nodes:[N([0,0,0],[0,-1,0],'O'),N([.05,.07,0],[1,0,0],'S')],
+    build:(g,m)=>{dkC(g,.036,.036,.02,12,DK.navy,0,.01,0);dkC(g,.07,.04,.12,14,mc(m),0,.08,0);dkT(g,.066,.01,DK.yel,0,.14,0,Math.PI/2,0,0,undefined,true);dkC(g,.052,.052,.004,12,DK.navy,0,.138,0,0,0,0,true);
+      for(let k=0;k<3;k++)dkB(g,.1,.006,.006,DK.metal,0,.142,0,0,k*Math.PI/3,0,true);}}
 };
-const BTRAY={combustion:['tank','otank','injector','cyl','ign','chamber','rad','manifold'],power:['gen','battery','wire','shaft','bus','gearbox','motor','cap'],magnet:['coil','core','magnet','ring','horseshoe','brake','slug'],weapon:['breech','barrel','gcoil','mag','loader','tring','hinge'],frame:['mount','rail','plate','adapter']};
-const BTN={combustion:'Combustion',power:'Power',magnet:'Magnets',weapon:'Weapons',frame:'Frame'};
+/* rotors: thrust from momentum theory. A rotor of radius R throws air down through its disc; for power P,
+   T = (FM\u00b7P)^(2/3) \u00b7 (2\u03c1A)^(1/3). FM, the figure of merit, is how much of the power ends up as lift. */
+const RHO=1.225,GRAV=9.81;
+const ROTOR_FM=[0,.45,.62,.68,.72];
+const rotorThrust=(kw,R,fm)=>kw>0&&R>0?Math.pow(fm*kw*1000,2/3)*Math.cbrt(2*RHO*Math.PI*R*R):0;   // newtons
+const bladeKW=(mat,sz)=>(MAT[mat]||MAT.Al).str*300*sz*sz;   // what one blade takes before it flies apart
+// a hub's blades, from bench pieces or a saved spec: [{pos,q,sz,mat}]. Returns the disc radius, blade count, FM and power limit.
+function rotorGeom(hub,blades){const s=hub.sz||1,ax=new V3(0,1,0).applyQuaternion(hub.q),c=new V3(0,.12*s,0).applyQuaternion(hub.q).add(hub.pos);let R=0,n=0,cap=0;
+  for(const b of blades){const bs=b.sz||1;if(b.pos.distanceTo(c)>.075*s+.01)continue;const tip=new V3(PCS.blade.len*bs,0,0).applyQuaternion(b.q).add(b.pos).sub(c);R=Math.max(R,tip.sub(ax.clone().multiplyScalar(tip.dot(ax))).length());n++;cap+=bladeKW(b.mat,bs);}
+  return{R,n,fm:ROTOR_FM[Math.min(4,n)]||0,cap,c,ax};}
+function benchRotor(h){return rotorGeom({pos:h.g.position,q:h.g.quaternion,sz:SZ(h)},bn.links.filter(l=>l.t==='R'&&(l.a===h||l.b===h)).map(l=>l.a===h?l.b:l.a).filter(b=>b.key==='blade'&&!b.failed).map(b=>({pos:b.g.position,q:b.g.quaternion,sz:SZ(b),mat:b.mat})));}
+const BTRAY={combustion:['tank','otank','injector','cyl','ign','chamber','rad','manifold'],power:['gen','battery','wire','shaft','bus','gearbox','motor','cap'],magnet:['coil','core','magnet','ring','horseshoe','brake','slug'],weapon:['breech','barrel','gcoil','mag','loader','tring','hinge'],flight:['hub','blade','intake'],frame:['mount','rail','plate','adapter']};
+const BTN={combustion:'Combustion',power:'Power',magnet:'Magnets',weapon:'Weapons',flight:'Flight',frame:'Frame'};
 const RATIOS=[[.5,'Slow \u00d7\u00bd'],[1,'Same speed'],[2,'Speed \u00d72']];
 const ADAPTS=[[1,2],[2,3],[1,3]];
 /* sizes: a 2\u00d7 piece is twice as long, so it has 4\u00d7 the surface and 8\u00d7 the volume.
@@ -1972,7 +2036,7 @@ function makePiece(key,mat,cont,pos,quat,opt,sz){const D=PCS[key],op=opt||(D.opt
 function rebuildPiece(p){for(const c of [...p.g.children])p.g.remove(c);p.r={};PCS[p.key].build(p.g,p.mat,p.cont,p.r,p.opt);p.g.traverse(o=>{if(o.isMesh){o.userData.piece=p;o.castShadow=true;}});}
 function nodePD(n,pos,q,outP,outD){outP.set(n.p[0],n.p[1],n.p[2]).applyQuaternion(q).add(pos);if(outD)outD.set(n.d[0],n.d[1],n.d[2]).applyQuaternion(q);return outP;}
 function nodeWorld(p,i,outP,outD){return nodePD(NODES(p)[i],p.g.position,p.g.quaternion,outP,outD);}
-const NOS=new Set(['C','G','A']),compat=(a,b)=>a===b||(a==='S'&&!NOS.has(b))||(b==='S'&&!NOS.has(a));
+const NOS=new Set(['C','G','A','R']),compat=(a,b)=>a===b||(a==='S'&&!NOS.has(b))||(b==='S'&&!NOS.has(a));
 function relink(){const L=[],P=bn.pieces,pa=new V3(),pb=new V3(),da=new V3(),db=new V3();
   for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const A=P[i],B=P[j],na=NODES(A),nb=NODES(B);
     for(let x=0;x<na.length;x++){nodeWorld(A,x,pa,da);for(let y=0;y<nb.length;y++){nodeWorld(B,y,pb,db);if(pa.distanceTo(pb)<.006&&da.dot(db)<-.9&&compat(na[x].t,nb[y].t)&&sameSize(na[x],nb[y]))L.push({a:A,ai:x,b:B,bi:y,t:na[x].t===nb[y].t?na[x].t:'S'});}}}
@@ -2067,7 +2131,7 @@ function attachPose(key,cont,tp,ti,ni,tw,sz,op){const n=nodesK(key,cont,sz,op)[n
   qFromTo(new V3(n.d[0],n.d[1],n.d[2]),D.clone().negate(),_q1);_q2.setFromAxisAngle(D,tw*Math.PI/2);const q=_q2.clone().multiply(_q1);
   const pos=P.clone().sub(new V3(n.p[0],n.p[1],n.p[2]).applyQuaternion(q));return{pos,q};}
 // boxes count only what you can see, so a rocket's hidden flame doesn't take up room
-function visBox(g){g.updateMatrixWorld(true);const box=new THREE.Box3(),bb=new THREE.Box3();g.traverseVisible(o=>{if(!o.isMesh||o.userData.port)return;if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);box.union(bb);});return box;}
+function visBox(g){g.updateMatrixWorld(true);const box=new THREE.Box3(),bb=new THREE.Box3();g.traverseVisible(o=>{if(!o.isMesh||o.userData.port||o.userData.sweep)return;if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);box.union(bb);});return box;}
 const BOXR={};
 function rawBox(key,sz,op){const D=PCS[key],o=D.opt==='adapt'?(op||D.defOpt):null,k=key+(o?'|'+o.from+'-'+o.to:'');
   if(!BOXR[k]){const g=new THREE.Group();D.build(g,D.def,D.defCont,{},o);BOXR[k]=visBox(g);}
@@ -2166,7 +2230,7 @@ function benchChecklist(){const P=bn.pieces.filter(p=>!p.failed),rows=[];if(!P.l
         it(has(mr,'M',['gen','gearbox','brake'])||bn.freeIn(mr,'M')?'ok':'no','Motion','Its motion has nowhere to go. Give it a generator, a gearbox, a brake disc or an open shaft end.'),
         it(has(hn,'H',['rad'])?'ok':'warn','Cooling','Nothing cools its heat port, so it will overheat. Add a radiator.')];}
     else if(p.key==='chamber'){const hn=bn.net(p,'H');
-      L=[it(has(bn.net(p,'F'),'F',['tank'])?'ok':'no','Fuel','Connect a fuel tank to its fuel port.'),it(has(bn.net(p,'O'),'O',['otank'])?'ok':'no','Oxidizer','Connect an oxidizer tank to its oxidizer port.'),
+      L=[it(has(bn.net(p,'F'),'F',['tank'])?'ok':'no','Fuel','Connect a fuel tank to its fuel port.'),it(has(bn.net(p,'O'),'O',['otank','intake'])?'ok':'no','Oxidizer','Connect an oxidizer tank to its oxidizer port, or an air intake to make it a jet.'),
         it(has(hn,'H',['rad'])?'ok':'warn','Cooling','Nothing cools it. Rocket chambers get very hot, so add a radiator.')];}
     else if(p.key==='coil'){const en=bn.net(p,'E');
       L=[it(has(en,'E',['battery','gen'])?'ok':'no','Power','Connect a battery or a generator to its power port.'),it(p.core?'ok':'warn','Core','No core. An iron or cobalt core makes the field up to 6 times stronger.'),
@@ -2189,6 +2253,9 @@ function benchChecklist(){const P=bn.pieces.filter(p=>!p.failed),rows=[];if(!P.l
         it(ring?(driven(ring)?'ok':'warn'):'warn','Turning',ring?'Its turret ring has no drive, so it can\u2019t turn. Give it an electric motor.':'No turret ring: a fixed gun, aimed by turning the vehicle.'),
         it(hin?(driven(hin)?'ok':'warn'):'warn','Elevation',hin?'Its hinge has no drive, so it stays level.':'No elevation hinge, so it can\u2019t aim up.')];
       if(slug&&powder)L.push(it('warn','Mixed rounds','Its magazines hold both slugs and shells. Each kind needs its own firing system.'));}
+    else if(p.key==='hub'){const G2=benchRotor(p),mr=bn.netAt(p,1);
+      L=[it(G2.n>=2?'ok':'no','Blades',G2.n?'One blade shakes itself apart. Put blades on at least two of its blade ports.':'Put rotor blades on its blade ports.'),
+        it(has(mr,'M',['cyl','gearbox','motor'])?'ok':bn.freeIn(mr,'M')?'ok':'no','Drive','Join an engine or a gearbox to its motion port, or leave the port open to drive it from the vehicle.')];}
     else if(p.key==='motor')L=[it(has(bn.net(p,'E'),'E',['battery','gen'])?'ok':'no','Power','Connect a battery or a generator to its power port.'),
       it([1,4,5].some(i=>bn.members(bn.netAt(p,i),'M').some(q=>q!==p)||bn.freeIn(bn.netAt(p,i),'M'))?'ok':'warn','Drives','Its motion goes nowhere. Run a drive shaft to a turret ring, hinge or loader.')];
     else if(p.key==='cap')L=[it(has(bn.net(p,'E'),'E',['battery','gen'])?'ok':'no','Charging','Charge it from a battery or a generator.')];
@@ -2242,9 +2309,11 @@ function boreChain(B){const chain=[];let cur=B,port=1;const seen=new Set([B]);
   return{chain,muz:{p:cur,i:port},L:chain.reduce((s,p)=>s+(p.key==='barrel'?.25:p.key==='gcoil'?.2:0)*SZ(p),0)};}
 // turning pivots: rings turn about their own up axis, hinges tilt about their own side axis. Inner pivots (smaller sets) apply first.
 function pivotsOf(){const out=[];for(const p of bn.pieces){if(p.failed||!PCS[p.key].turns)continue;const s=SZ(p),P=new V3(),D=new V3();
+    if(p.key==='hub'){P.set(0,.12*s,0).applyQuaternion(p.g.quaternion).add(p.g.position);D.set(0,1,0).applyQuaternion(p.g.quaternion);out.push({p,kind:'rotor',P,D,set:new Set(bn.links.filter(l=>l.t==='R'&&(l.a===p||l.b===p)).map(l=>l.a===p?l.b:l.a)),ang:0,target:0,w:0});continue;}
     if(p.key==='tring'){nodeWorld(p,1,P);D.set(0,1,0).applyQuaternion(p.g.quaternion);}else{P.set(0,.08*s,0).applyQuaternion(p.g.quaternion).add(p.g.position);D.set(1,0,0).applyQuaternion(p.g.quaternion);}
     out.push({p,kind:p.key==='tring'?'ring':'hinge',P,D,set:null,ang:0,target:0,w:0});}
   for(const v of out)if(v.kind==='ring')v.set=turnSet(v.p,null);
+  for(const v of out)if(v.kind==='rotor')for(const o of out)if(o.kind==='ring'&&o.set&&o.set.has(v.p))for(const b of v.set)o.set.add(b);
   for(const v of out)if(v.kind==='hinge'){const outer=out.find(o=>o.kind==='ring'&&o.set.has(v.p));v.set=turnSet(v.p,outer?outer.set:null);}
   return out.sort((a,b)=>a.set.size-b.set.size);}
 const _pq=new THREE.Quaternion();
@@ -2256,7 +2325,7 @@ function poseTurned(T){if(!T||!T.pivots||!T.pivots.length)return;const moved=new
     const B=p.recoil;if(B&&B.rec>0)pos.addScaledVector(B.dir,-.018*SZ(B.p)*B.rec);
     p.g.position.copy(pos);p.g.quaternion.copy(q);}
   // pivot axes move with outer pivots too
-  for(const v of T.pivots){if(v.p.r.top)v.p.r.top.rotation.y=v.kind==='ring'?v.ang:0;if(v.p.r.tilt)v.p.r.tilt.rotation.x=v.kind==='hinge'?v.ang:0;}
+  for(const v of T.pivots){if(v.kind==='rotor'){if(v.p.r.spin)v.p.r.spin.rotation.y=v.ang;continue;}if(v.p.r.top)v.p.r.top.rotation.y=v.kind==='ring'?v.ang:0;if(v.p.r.tilt)v.p.r.tilt.rotation.x=v.kind==='hinge'?v.ang:0;}
   for(const l of bn.lines)if(moved.has(l.a)||moved.has(l.b)){updateLine(l);l.stale=true;}}
 const BSHOTS=[];
 function benchShot(pos,dir,v,s,slug){const m=slug?fa(asm,fB(.018*s,.018*s,.03*s),fmat(DK.metal),0,0,0,0,0,0,true):fa(asm,fS(.014*s,8,6),fmat(0xffe27a),0,0,0,0,0,0,true);
@@ -2274,7 +2343,7 @@ function resetPiece(p){p.T=20;p.failed=false;p.dm=1;p.cooked=false;p.stuck=null;
 function benchStart(){if(!bn.pieces.length){toast('Put something on the bench first.','warn');return;}benchStop(true);
   for(const p of bn.pieces){resetPiece(p);p.g.visible=true;}
   bghost.visible=false;clearGroup(cghost);bn.conn=null;bn.sel=null;bn.selL=null;for(const l of bn.lines)hiLine(l,false);dirtyBench=true;
-  bn.test={running:true,t:0,clean:0,hist:[],out:{mech:0,elec:0,thrust:0,field:0,fuel:0,brake:0,pull:0,reach:0,mis:0},fail:null,status:'',rated:null};
+  bn.test={running:true,t:0,clean:0,hist:[],out:{mech:0,elec:0,thrust:0,lift:0,field:0,fuel:0,brake:0,pull:0,reach:0,mis:0},fail:null,status:'',rated:null};
   // turret rings and hinges: remember where everything they carry sits, so the test can turn it and Reset can put it back
   const T=bn.test;T.pivots=pivotsOf();for(const v of T.pivots)for(const p of v.set){p.home=p.home||{pos:p.g.position.clone(),q:p.g.quaternion.clone()};p.base={pos:p.g.position.clone(),q:p.g.quaternion.clone()};}
   T.guns=new Map(bn.pieces.filter(p=>p.key==='breech').map(B=>[B,boreChain(B)]));T.gun=null;refreshNodes();renderBenchRead();}
@@ -2320,18 +2389,19 @@ function simTick(dt){const T=bn.test;if(!T||!T.running)return;T.t+=dt;const ramp
     if(c.starve)c.warn=`Starved. Its injector${inj.length>1?'s':''} can feed only ${Math.round(c.starve*100)}% of the fuel it wants. Use a bigger injector or add another.`;
     else if(c.mr>.1)c.warn=`Misfiring ${Math.round(c.mr*100)}% of the time. ${sf<.98?'Its spark is short of power.':'Its igniter is wearing. Copper or tungsten fire more reliably.'}`;
     else if(knock>.05)c.warn=`Knocking: it\u2019s so hot the fuel lights early. Power is down ${Math.round(knock*45)}% and it makes more heat. Ease off or cool it more.`;}
-  for(const ch of P.filter(p=>p.key==='chamber')){const fn=bn.net(ch,'F'),ft=tankOf(fn,'F'),ot=tankOf(bn.net(ch,'O'),'O');ch.starve=0;if(!ft||!ot){ch.status=!ft?'No fuel reaches it':'No oxidizer reaches it';ch.thr=0;continue;}
+  for(const ch of P.filter(p=>p.key==='chamber')){const fn=bn.net(ch,'F'),ft=tankOf(fn,'F'),air=bn.members(bn.net(ch,'O'),'O').some(q=>q.key==='intake'),ot=air?null:tankOf(bn.net(ch,'O'),'O');ch.starve=0;ch.jet=air;if(!ft||(!ot&&!air)){ch.status=!ft?'No fuel reaches it':'No oxidizer reaches it';ch.thr=0;continue;}
     const inj=bn.members(fn,'F').filter(p=>p.key==='injector'),nch=bn.members(fn,'F').filter(p=>p.key==='chamber').length||1,cap=inj.length?inj.reduce((s,p)=>s+.06*gain*S3(p),0)/nch:Infinity;
-    const full=th*.05*gain*S3(ch),fu=FUEL[ft.cont]||FUEL.C,ox=OXI[ot.cont]||OXI.KNO3,rate=Math.min(full,cap),gf=takeFuel(fn,'F',rate*dt)/dt,go=takeFuel(bn.net(ch,'O'),'O',rate*dt)/dt,flow=Math.min(gf,go)*2;
+    const full=th*.05*gain*S3(ch),fu=FUEL[ft.cont]||FUEL.C,ox=air?null:(OXI[ot.cont]||OXI.KNO3),rate=Math.min(full,cap),gf=takeFuel(fn,'F',rate*dt)/dt,go=air?gf:takeFuel(bn.net(ch,'O'),'O',rate*dt)/dt,flow=Math.min(gf,go)*2;
     if(rate<full*.97){ch.starve=rate/full;ch.warn=`Its injector holds it to ${Math.round(ch.starve*100)}% of full thrust.`;}
     // a white-hot nozzle starts to wear away and loses thrust
-    const wear=hot(ch,.8),kn=flow*fu.ve*ox.k/1000*(1-.5*wear);if(wear>.05)ch.warn=`White hot. The nozzle is wearing away and thrust is down ${Math.round(wear*50)}%.`;
-    thrust+=kn;ch.thr=kn;ch.qh+=flow*fu.mj*1000*.027;fuelUse+=gf+go;}
+    // a jet throws out the air it swallowed as well as its fuel: about 30 kN for every kg of fuel a second, more with richer fuel
+    const wear=hot(ch,.8),kn=(air?gf*30*Math.sqrt(fu.mj/30):flow*fu.ve*ox.k/1000)*(1-.5*wear);if(wear>.05)ch.warn=`White hot. The nozzle is wearing away and thrust is down ${Math.round(wear*50)}%.`;
+    thrust+=kn;ch.thr=kn;ch.qh+=air?gf*fu.mj*1000*.02:flow*fu.mj*1000*.027;fuelUse+=air?gf:gf+go;}
   // motion: each network of joined motion ports. Cylinders feed it; generators, brake discs, then gearboxes take from it; the rest leaves an open port or turns to heat.
-  const mn=new Map(),getN=(r)=>{let N=mn.get(r);if(!N){N={r,cyl:[],gen:[],gin:[],brk:[],mot:[],use:[],shafts:[],lines:[],spin:[],inc:0,speed:0,done:false};mn.set(r,N);}return N;},add=(a,x)=>{if(x&&!a.includes(x))a.push(x);};
+  const mn=new Map(),getN=(r)=>{let N=mn.get(r);if(!N){N={r,cyl:[],gen:[],gin:[],brk:[],mot:[],use:[],hub:[],shafts:[],lines:[],spin:[],inc:0,speed:0,done:false};mn.set(r,N);}return N;},add=(a,x)=>{if(x&&!a.includes(x))a.push(x);};
   for(const p of P)NODES(p).forEach((n,i)=>{if(n.t!=='M')return;const N=getN(bn.netAt(p,i));
     if(p.key==='cyl')add(N.cyl,p);else if(p.key==='gen'){add(N.gen,p);add(N.spin,p.r.spin);}else if(p.key==='shaft'){add(N.shafts,p);add(N.spin,p.r.spin);}
-    else if(p.key==='brake'){add(N.brk,p);add(N.spin,p.r.spin);}else if(p.key==='motor'){add(N.mot,p);add(N.spin,p.r.spin);}else if(NEED[p.key])add(N.use,p);
+    else if(p.key==='brake'){add(N.brk,p);add(N.spin,p.r.spin);}else if(p.key==='motor'){add(N.mot,p);add(N.spin,p.r.spin);}else if(p.key==='hub')add(N.hub,p);else if(NEED[p.key])add(N.use,p);
     else if(p.key==='gearbox'){if(n.g)add(N.spin,p.r.spin2);else{add(N.gin,p);add(N.spin,p.r.spin);}}});
   // brake discs drag in proportion to the field on them, squared. Copper conducts best, so it drags hardest.
   for(const b of P.filter(p=>p.key==='brake')){const s=SZ(b),c=new V3(0,.05*s,0).applyQuaternion(b.g.quaternion).add(b.g.position);let Bd=0;
@@ -2348,6 +2418,9 @@ function simTick(dt){const T=bn.test;if(!T||!T.running)return;T.t+=dt;const ramp
       // turret drives, hinges and loaders need only a little, so they take theirs first
       {const want=N.use.reduce((s,c)=>s+(c.need===undefined?NEED[c.key]*S3(c):c.need),0),k=want>0?Math.min(1,left/want):0;for(const c of N.use){c.pin=(c.need===undefined?NEED[c.key]*S3(c):c.need)*k;left-=c.pin;}left=Math.max(0,left);}
       for(const g of N.gen)g.pin=Math.min(150*gain*S3(g),total/N.gen.length);left-=N.gen.reduce((s,g)=>s+g.pin,0);left=Math.max(0,left);
+      // rotors soak up power until their blades can take no more. Far past that, they fly apart.
+      for(const h of N.hub){const G2=benchRotor(h),take=G2.n?Math.min(left/N.hub.length,G2.cap):0;h.rot=G2;h.pin=take;left-=take;
+        if(G2.n&&total/N.hub.length>G2.cap*1.3){const b=bn.links.find(l=>l.t==='R'&&(l.a===h||l.b===h));fail(b.a===h?b.b:b.a,`The ${MAT[(b.a===h?b.b:b.a).mat].name.toLowerCase()} blades flew apart: ${Math.round(total)} kW is far more than ${G2.n} of them can take (${Math.round(G2.cap)} kW). Use stronger or bigger blades, or more of them.`);return;}}
       for(const b of N.brk){const take=Math.min(left,(b.pmax||0)*sp);b.pb=take;b.qh+=take;left-=take;brake+=take;}
       if(N.gin.length&&left>0){const each=left/N.gin.length;for(const g of N.gin){const O=outOf(g);g.qh+=each*.04;if(O&&O!==N){O.inc+=each*.96;O.speed=Math.max(O.speed,(N.speed||1)*((g.opt&&g.opt.ratio)||1));}}left=0;}
       // the weakest shaft or drive shaft sets the limit. Spinning faster means less twist for the same power; a bigger shaft is stronger.
@@ -2357,6 +2430,8 @@ function simTick(dt){const T=bn.test;if(!T||!T.running)return;T.t+=dt;const ramp
       if(left>0){if(bn.freeIn(N.r,'M'))mech+=left;else if(N.cyl.length){for(const c of N.cyl)c.qh+=left*.6/N.cyl.length;}}
       const rate=dt*Math.min(40,(total/6+(total>0?4:0))*(N.speed||1))/Math.max(1,Math.sqrt(N.cyl.reduce((m,c)=>Math.max(m,SZ(c)),1)));for(const s of N.spin)s.rotation.y+=rate;}
     if(!moved)break;}
+  let lift=0;for(const h of P.filter(p=>p.key==='hub')){const G2=h.rot||benchRotor(h),kw=h.pin||0,T=rotorThrust(kw,G2.R,G2.fm)/1000;h.lift=T;lift+=T;h.qh+=kw*.03;h.w=kw>0?Math.min(28,3+Math.sqrt(kw)*.9):0;
+    if(!G2.n)h.status='Needs blades on its blade ports';else if(G2.n<2)h.warn='One blade shakes itself apart. Use two or more.';else if(kw<=0&&!bn.freeIn(bn.netAt(h,1),'M'))h.status='Nothing turns it. Join an engine to its motion port';h.pin=0;}
   for(const g of P.filter(p=>p.key==='gen')){const eff=({Cu:.92,Al:.86,Fe:.7}[g.mat]||.85)*(1-.3*hot(g,.75)),pin=g.pin||0;g.pe=pin*eff;g.qh+=pin-g.pe;g.lastPe=g.pe;g.pin=0;}
   // electricity
   const enets=new Map();for(const p of P){const r=bn.net(p,'E');if(r){if(!enets.has(r))enets.set(r,[]);enets.get(r).push(p);}}
@@ -2399,7 +2474,7 @@ function simTick(dt){const T=bn.test;if(!T||!T.running)return;T.t+=dt;const ramp
     if(dist-half<=sl.v*dt+.002){sl.g.position.add(dir.multiplyScalar((dist-half)/Math.max(dist,1e-6)));sl.stuck=true;sl.hold=bf/9.81;sparks(asm.localToWorld(bp.clone()),4,.6);}
     else sl.g.position.addScaledVector(dir.normalize(),sl.v*dt);}
   // turret rings and hinges turn toward a sweeping target, as fast as their drive allows for the weight they carry
-  for(const v of T.pivots||[]){if(v.p.failed)continue;const m=[...v.set].reduce((s,p)=>s+pieceMass(p),0),pw=v.p.pin||0;
+  for(const v of T.pivots||[]){if(v.p.failed)continue;if(v.kind==='rotor'){v.ang+=(v.p.w||0)*dt;continue;}const m=[...v.set].reduce((s,p)=>s+pieceMass(p),0),pw=v.p.pin||0;
     const full=NEED[v.p.key]*S3(v.p),pf=v.p.need>0?pw*full/v.p.need:pw;v.w=v.kind==='ring'?Math.min(180,1200*pf/(m+5)):Math.min(90,800*pf/(m+5));v.mass=m;
     v.target=v.kind==='ring'?Math.PI/3*Math.sin(T.t*.6):(.35+.35*Math.sin(T.t*.9));
     if(v.kind==='hinge'){if(v.sgn===undefined){const B=[...v.set].find(p=>p.key==='breech');if(B){const d=new V3();nodeWorld(B,1,new V3(),d);v.sgn=new V3().crossVectors(v.D,d).y>=0?1:-1;}else v.sgn=1;}v.target*=v.sgn;}
@@ -2451,7 +2526,7 @@ function simTick(dt){const T=bn.test;if(!T||!T.running)return;T.t+=dt;const ramp
       p.key==='gcoil'?'The coil stage burned out. Most of a coilgun\u2019s power turns to heat: give it a radiator or fire slower.':p.key==='motor'?`The ${nm} motor overheated.`:p.key==='breech'?`The ${nm} breech overheated.`:`The ${PCS[p.key].name.toLowerCase()} overheated.`)+big);return;}
     tint(p,clamp((pct-.45)/.55,0,1));}
   // the readout, averaged over the last few seconds
-  const out={mech,elec,thrust,field,fuel:fuelUse*60,brake,pull:pullMax,reach,mis:cyls.length?cyls.reduce((s,c)=>s+(c.misN||0),0)/Math.max(1,cyls.reduce((s,c)=>s+(c.fireN||0),0)):0};T.out=out;T.hist.push(out);if(T.hist.length>150)T.hist.shift();
+  const out={mech,elec,thrust,lift,field,fuel:fuelUse*60,brake,pull:pullMax,reach,mis:cyls.length?cyls.reduce((s,c)=>s+(c.misN||0),0)/Math.max(1,cyls.reduce((s,c)=>s+(c.fireN||0),0)):0};T.out=out;T.hist.push(out);if(T.hist.length>150)T.hist.shift();
   if(!bn.pieces.some(p=>(p.key==='tank'||p.key==='otank')&&p.fuel>0)&&bn.pieces.some(p=>p.key==='cyl'||p.key==='chamber')){T.running=false;T.status='Out of fuel.';}
   T.heatWarn=P.filter(p=>p.eta<1e6).sort((a,b)=>a.eta-b.eta)[0]||null;
   // a pass needs 8 steady seconds: nothing broken and nothing still heating toward its limit
@@ -2529,7 +2604,10 @@ function partStats(spec,rated){const o=rated||{},s=normSpec(spec);let mass=0,fue
     if(a[0]==='tank')fuel+=q.fuel;if(a[0]==='coil')coils++;if(a[0]==='gen')gens++;if(a[0]==='cyl')cyls++;if(a[0]==='chamber')ch++;if(a[0]==='battery')bats++;}
   for(const L of s.l){const A=s.p[L[0]],B=s.p[L[2]];if(A&&B){const na=nodesK(A[0],A[2],A[7]||1,A[6])[L[1]];if(na)mass+=lineMass(na.t,L[4],new V3().fromArray(A[3]).distanceTo(new V3().fromArray(B[3])),na.z);}}
   const power=Math.round((o.mech||0)+(o.elec||0)),makes=power>0,uses=coils>0&&!gens&&!bats;
-  return{mass:mass/1000,power,mech:Math.round(o.mech||0),elecOut:Math.round(o.elec||0),fuel:Math.round(fuel*10)/10,field:o.field||0,thrust:o.thrust||0,fuelUse:o.fuel||0,pull:o.pull||0,reach:o.reach||0,brake:o.brake||0,draw:uses?coils*bn.coilKw:0,makes,uses,engine:cyls>0||ch>0};}
+  // a rotor: its hub and the blades on it, measured from where they sit
+  const pose=(a)=>({pos:new V3().fromArray(a[3]),q:new THREE.Quaternion().fromArray(a[4]),sz:PCS[a[0]].fixed?1:(a[7]||1),mat:a[1]}),hub=s.p.find(a=>a[0]==='hub');let rotor=null;
+  if(hub){const g2=rotorGeom(pose(hub),s.p.filter(a=>a[0]==='blade').map(pose));if(g2.n>=2)rotor={R:+g2.R.toFixed(3),n:g2.n,fm:g2.fm,cap:Math.round(g2.cap),x:+g2.c.x.toFixed(3),y:+g2.c.y.toFixed(3),z:+g2.c.z.toFixed(3)};}
+  return{rotor,lift:o.lift||0,mass:mass/1000,power,mech:Math.round(o.mech||0),elecOut:Math.round(o.elec||0),fuel:Math.round(fuel*10)/10,field:o.field||0,thrust:o.thrust||0,fuelUse:o.fuel||0,pull:o.pull||0,reach:o.reach||0,brake:o.brake||0,draw:uses?coils*bn.coilKw:0,makes,uses,engine:cyls>0||ch>0};}
 const axisOf=(v)=>{const a=[0,1,2].reduce((m,i)=>Math.abs(v[i])>Math.abs(v[m])?i:m,0),o=[0,0,0];o[a]=Math.sign(v[a])||1;return o;};
 // the housing: the part's real size rounded up to whole cells. The mount plate lines up with the grid, because that's what plugs into the sockets:
 // a 1\u00d7 plate covers one socket, a 2\u00d7 plate a 2 \u00d7 2 patch, a 3\u00d7 plate a 3 \u00d7 3 patch.
@@ -2554,32 +2632,36 @@ function registerPart(sp){const key='cp'+sp.id,st=sp.stats,s=normSpec(sp.spec),F
   const thrust=st.thrust>.01?st.thrust:0,plume=thrust&&sp.tdir?axisOf([-sp.tdir[0],-sp.tdir[1],-sp.tdir[2]]):null,uses=st.uses&&ports.some(q=>q[0]==='E');
   const needs=[];if(has('cyl'))needs.push('It burns fuel. Short of fuel it slows down, and with a weak spark it misfires.');
   if(has('chamber'))needs.push('It burns fuel and oxidizer. Short of either, its thrust drops.');if(uses)needs.push(`It draws ${Math.round(st.draw)} kW of power. Short of power, its field weakens.`);
-  const pk=[...new Set(ports.map(q=>PORTN[q[0]]))],gun=st.gun&&sp.rig?st.gun:null;let sweep=null,gunH=0;
+  const pk=[...new Set(ports.map(q=>PORTN[q[0]]))],gun=st.gun&&sp.rig?st.gun:null,rot=st.rotor&&ports.some(q=>q[0]==='M')?st.rotor:null;let sweep=null,gunH=0;
+  // a rotor's blades sweep a circle at hub height that nothing can be built in
+  if(rot){gunH=rot.y;sweep={r:rot.R+.15,layer:Math.max(0,Math.floor(rot.y/G)),ax:[rot.x+F.off[0],rot.z+F.off[1]]};needs.push(`Its ${rot.R.toFixed(1)} m rotor takes up to ${rot.cap} kW through a drive shaft. At that it lifts ${(rotorThrust(rot.cap,rot.R,rot.fm)/GRAV/1000).toFixed(1)} t.`);}
   if(gun){const P=s.p,pose=(i)=>({pos:new V3().fromArray(P[i][3]),q:new THREE.Quaternion().fromArray(P[i][4]),a:P[i]}),M=pose(sp.rig.muz[0]),nm=nodesK(M.a[0],M.a[2],M.a[7]||1,M.a[6])[sp.rig.muz[1]];
     const mzp=new V3(...nm.p).applyQuaternion(M.q).add(M.pos);mzp.x+=F.off[0];mzp.z+=F.off[1];gunH=mzp.y;
     if(sp.rig.ring>=0){const R0=pose(sp.rig.ring),ax=new V3(0,.06*(R0.a[7]||1),0).applyQuaternion(R0.q).add(R0.pos);ax.x+=F.off[0];ax.z+=F.off[1];
       sweep={r:Math.hypot(mzp.x-ax.x,mzp.z-ax.z)+.2,layer:Math.max(0,Math.floor(gunH/G)),ax:[ax.x,ax.z]};}}
   const gunDesc=gun?` A ${gun.mech==='coil'?'coilgun':'gun'} firing ${gun.ammo.toLowerCase()}s at ${Math.round(gun.v)} m/s every ${gun.reload.toFixed(1)} s, ${gun.rounds} rounds. ${gun.ring?`It turns ${Math.round(gun.trav)}\u00b0/s`:'It\u2019s fixed, so aim by turning the vehicle'}${gun.hinge?` and lifts ${Math.round(gun.elev)}\u00b0/s`:''}.`:'';
   PD[key]={name:sp.name,custom:true,mount:'top',foot:F,mass:Math.max(.01,Math.round(st.mass*100)/100),power:st.makes?st.power:0,fuel:st.fuel||0,mag:st.field>.05?st.field*1.6:0,
-    elec:st.makes?'make':uses?'use':undefined,draw:uses?st.draw:0,thrust,fuelUse:st.fuelUse||0,kick:gun?gun.kick:thrust,plume,plumeLen:2,tdir:sp.tdir||null,
+    elec:st.makes?'make':uses?'use':undefined,draw:uses?st.draw:0,thrust,fuelUse:st.fuelUse||0,kick:gun?gun.kick:thrust/12,plume,plumeLen:2,tdir:sp.tdir||null,drive:rot?'rotor':undefined,rotor:rot,
     mech:st.makes?(st.mech!==undefined?st.mech:(ports.some(q=>q[0]==='M')?st.power:0)):0,eout:st.makes?(st.elecOut!==undefined?st.elecOut:(!ports.some(q=>q[0]==='M')&&ports.some(q=>q[0]==='E')?st.power:0)):0,
     vent:!!st.vent,engine:!!st.engine,ports,fuelPort:ports.some(q=>q[0]==='F'),pull:st.pull||0,reach:st.reach||0,weapon:gun?'gun':undefined,gun,rig:gun?sp.rig:null,sweep,gunH,builtin:!!sp.builtin,
-    stat:[gun?`${Math.round(gun.v)} m/s \u00b7 ${gun.ke>=1000?(gun.ke/1000).toFixed(1)+' MJ':Math.round(gun.ke)+' kJ'} \u00b7 ${gun.reload.toFixed(1)} s`:'',st.power?`${st.power} kW`:'',thrust?`${thrust.toFixed(1)} kN`:'',st.field>.05?`${st.field.toFixed(2)} T`:'',st.pull>1?`holds ${Math.round(st.pull)} kg`:'',st.fuel?`${st.fuel} kg fuel`:'',`${F.w} \u00d7 ${F.d}`].filter(Boolean).join(' \u00b7 '),
+    stat:[gun?`${Math.round(gun.v)} m/s \u00b7 ${gun.ke>=1000?(gun.ke/1000).toFixed(1)+' MJ':Math.round(gun.ke)+' kJ'} \u00b7 ${gun.reload.toFixed(1)} s`:'',rot?`${rot.R.toFixed(1)} m rotor \u00b7 up to ${rot.cap} kW`:'',st.power?`${st.power} kW`:'',thrust?`${thrust.toFixed(1)} kN`:'',st.field>.05?`${st.field.toFixed(2)} T`:'',st.pull>1?`holds ${Math.round(st.pull)} kg`:'',st.fuel?`${st.fuel} kg fuel`:'',`${F.w} \u00d7 ${F.d}`].filter(Boolean).join(' \u00b7 '),
     desc:`${sp.builtin?'Built on the bench from':'Your part from the bench, built from'} ${s.p.length} pieces${s.l.length?` and ${s.l.length} line${s.l.length>1?'s':''}`:''}.${gunDesc} Its housing is ${F.w} \u00d7 ${F.d} \u00d7 ${F.h} cells, and its mount plate needs ${F.base.length>1?`a ${F.bw} \u00d7 ${F.bd} patch of sockets`:'one socket'}.${pk.length?` Ports on the outside: ${pk.join(', ')}.`:''} ${needs.join(' ')}`.trim(),
-    build:(g,r)=>{r.spins=[];r.flames=[];const m=fg(g,F.off[0],0,F.off[1]);if(gun)buildRigged(m,sp,r);else buildSpec(m,sp.spec,r.spins,r.flames);r.ports=housingPorts(g,F,ports);
+    build:(g,r)=>{r.spins=[];r.flames=[];const m=fg(g,F.off[0],0,F.off[1]);if(gun)buildRigged(m,sp,r);else{const made=buildSpec(m,sp.spec,r.spins,r.flames);
+        // the hub and its blades turn together about the hub's axis
+        if(rot){m.updateMatrixWorld(true);r.rotor=fg(m,rot.x,rot.y,rot.z);m.updateMatrixWorld(true);for(const x of made)if(x.key==='blade'||x.key==='hub')r.rotor.attach(x.g);}}r.ports=housingPorts(g,F,ports);
       // the housing itself: a faint box the size of the cells it claims
       const w=(F.a[1]-F.a[0]+1)*G-.02,h=(F.n[1]+1)*G-.02,d=(F.b[1]-F.b[0]+1)*G-.02,box=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),HOUSING_M);
       box.position.set((F.a[0]+F.a[1])/2*G,h/2+.01,(F.b[0]+F.b[1])/2*G);box.userData.housing=true;box.userData.port=true;box.visible=state.mode==='build';g.add(box);}};
   if(!TRAY.parts.includes(key)){if(sp.builtin)TRAY.parts.splice(BUILTIN.findIndex(b=>'b_'+b[0]===sp.id),0,key);else TRAY.parts.push(key);}return key;}
 function saveBenchPart(){const T=bn.test;if(!rootPiece()){toast('A part needs a mount plate.','warn');return;}
-  const active=bn.pieces.some(p=>['cyl','chamber','gen','coil','gearbox','brake','breech'].includes(p.key));if(active&&!(T&&T.rated)){toast(bn.pieces.some(p=>p.key==='breech')?'Run a test until the gun has fired twice and held steady for 8 s, so it has real numbers.':'Run a test for 8 steady seconds first, so the part has real numbers.','warn',3.5);return;}
+  const active=bn.pieces.some(p=>ACTIVE_PCS.includes(p.key));if(active&&!(T&&T.rated)){toast(bn.pieces.some(p=>p.key==='breech')?'Run a test until the gun has fired twice and held steady for 8 s, so it has real numbers.':'Run a test for 8 steady seconds first, so the part has real numbers.','warn',3.5);return;}
   const name=($('#bName').value||'').trim()||`Custom part ${bn.saved.length+1}`,sp=benchPartSpec(name);
   bn.saved.push(sp);const key=registerPart(sp);thumbPart(key);saveParts();toast(`Saved \u201c${name}\u201d${sp.stats.gun?', a gun':''}, needing a ${PD[key].foot.bw} \u00d7 ${PD[key].foot.bd} socket patch. It\u2019s in the vehicle bay\u2019s Parts tray.`,'good',3.5);$('#bName').value='';renderBenchRead();
   if(bn.target)fitTarget(key);}
 // everything a saved part needs: its pieces, tested numbers, open ports, which way it pushes, and how a gun turns
 function benchPartSpec(name){const T=bn.test,spec=benchSerialize(),st=partStats(spec,T&&T.rated);
   // every port left open becomes a connector on the housing
-  const ports=[];for(const p of bn.pieces)NODES(p).forEach((n,i)=>{if(!PORTN[n.t]||p.linked.has(i)||p.blocked.has(i))return;const D=new V3(),P=nodeWorld(p,i,new V3(),D);ports.push([n.t,...P.toArray().map(v=>+v.toFixed(4)),...D.toArray().map(v=>+v.toFixed(3)),n.z]);});
+  const ownFuel=bn.pieces.some(p=>p.key==='tank'),ports=[];for(const p of bn.pieces)NODES(p).forEach((n,i)=>{if(!PORTN[n.t]||n.t==='H'||(n.t==='F'&&ownFuel)||p.linked.has(i)||p.blocked.has(i))return;const D=new V3(),P=nodeWorld(p,i,new V3(),D);ports.push([n.t,...P.toArray().map(v=>+v.toFixed(4)),...D.toArray().map(v=>+v.toFixed(3)),n.z]);});
   // which way the rockets push, in the part's own frame (a nozzle points down its chamber, so it pushes up)
   const td=new V3();for(const c of bn.pieces)if(c.key==='chamber'&&!c.failed)td.addScaledVector(new V3(0,1,0).applyQuaternion(c.g.quaternion),Math.max(.01,c.thr||0));
   st.vent=bn.pieces.some(p=>['cyl','chamber','rad','brake','gen'].includes(p.key));
@@ -2588,11 +2670,15 @@ function benchPartSpec(name){const T=bn.test,spec=benchSerialize(),st=partStats(
   if(T&&T.rated&&T.rated.gun){const g=T.rated.gun;st.gun={v:g.v,ke:g.ke,kick:g.kick,reload:g.reload,cal:g.cal,mech:g.mech,ammo:g.ammo,trav:g.trav,elev:g.elev,ring:g.ring,hinge:g.hinge,rounds:g.total};}
   return{id:Date.now().toString(36),name,spec,stats:st,ports,tdir:st.thrust>.01&&td.lengthSq()>0?td.normalize().toArray().map(v=>+v.toFixed(3)):null,q:bn.q,rig:st.gun?rigOf():null};}
 /* ---------- built-in guns: the game tank's cannon and the rover's MG are built on the bench like anything else ---------- */
-const BUILTIN=[['cannon','Tank cannon'],['mg','Roof MG']];
-function registerBuiltins(){bn.quiet=true;
-  for(const [id,name] of BUILTIN){try{benchPreset(id);benchStart();for(let i=0;i<30*24&&bn.test.running;i++){simTick(1/30);if(bn.test.rated&&bn.test.rated.gun)break;}
-      if(bn.test.rated){const sp=benchPartSpec(name);sp.id='b_'+id;sp.builtin=true;registerPart(sp);}}catch(e){console.warn('built-in',id,e);}}
-  benchLoad([]);bn.undo.length=0;bn.test=null;bn.name='';$('#bName').value='';bn.quiet=false;}
+// pieces that do something when run: a part with any of them needs a passed test before it can be saved
+const ACTIVE_PCS=['cyl','chamber','gen','coil','gearbox','brake','breech'];
+// engines, rotors and jets are built on the bench like the guns. Engines and jets are rated at full throttle.
+const BUILTIN=[['cannon','Tank cannon'],['mg','Roof MG'],['plant','Power plant'],['rotor','Lift rotor'],['jet','Jet engine']],BUILTIN_THR={plant:1,jet:1};
+function registerBuiltins(){bn.quiet=true;const th0=bn.throttle;
+  for(const [id,name] of BUILTIN){try{benchPreset(id);const active=bn.pieces.some(p=>ACTIVE_PCS.includes(p.key));bn.test=null;
+      if(active){bn.throttle=BUILTIN_THR[id]||th0;benchStart();for(let i=0;i<30*24&&bn.test.running;i++){simTick(1/30);if(bn.test.rated&&(bn.test.rated.gun||!bn.pieces.some(p=>p.key==='breech')))break;}bn.throttle=th0;}
+      if(!active||bn.test.rated){const sp=benchPartSpec(name);sp.id='b_'+id;sp.builtin=true;registerPart(sp);}else console.warn('built-in',id,'failed its test',bn.test&&bn.test.fail&&bn.test.fail.why);}catch(e){console.warn('built-in',id,e);}}
+  bn.throttle=th0;benchLoad([]);bn.undo.length=0;bn.test=null;bn.name='';$('#bName').value='';bn.quiet=false;}
 function saveParts(){try{localStorage.setItem('blockbay.parts',JSON.stringify(bn.saved));}catch(e){}}
 function loadParts(){try{const s=JSON.parse(localStorage.getItem('blockbay.parts')||'[]');if(Array.isArray(s))for(const sp of s){if(!specOK(sp.spec))continue;bn.saved.push(sp);registerPart(sp);}}catch(e){}}
 let thumbR=null;
@@ -2640,8 +2726,22 @@ function benchPreset(name){benchSnap();for(const l of [...bn.lines])dropLine(l);
     const ld=put('loader','Fe',null,b,2,2,1);put('mag','Al','slug',ld,1,2);const mo=put('motor','Cu',null,b,5,0);
     const bt=put('battery','Li',null,m,1,2),bt2=put('battery','Li',null,m,4,2),k1=put('cap','Cu',null,m,2,0),k2=put('cap','Cu',null,m,3,0);
     addLine(mo,1,ld,3,'Fe');addLine(mo,4,r,2,'Fe');addLine(mo,5,h,2,'Fe');addLine(bt,0,mo,2,'Cu');addLine(bt,1,k1,1,'Cu');addLine(k1,2,k2,1,'Cu');addLine(k2,2,c1,2,'Cu');addLine(c1,4,c2,2,'Cu');addLine(c2,4,c3,2,'Cu');addLine(bt2,0,c3,4,'Cu');}
+  else if(name==='plant'){// three 2\u00d7 cylinders into one gearbox: about 2.7 MW out of a 3\u00d7 motion port, with its own fuel
+    const m=put('mount','Fe',null,null,0,0,0,null,2),gb=put('gearbox','Fe',null,m,0,0,0,null,2);
+    const cs=[1,2,3].map(i=>put('cyl','Fe',null,gb,i,1,0,null,2));
+    put('adapter','Fe','M',gb,4,0,0,{from:3,to:2});
+    const bat=put('battery','Li',null,m,3,2,0,null,2),bus=put('bus','Cu',null,m,4,0,0,null,2);addLine(bat,0,bus,1,'Cu');
+    cs.forEach((c,n)=>{const inj=put('injector','Fe',null,c,0,0,0,null,2);put('tank','Al','C',inj,1,0,0,null,2);const ig=put('ign','Cu',null,c,2,0,0,null,2);
+      addLine(bus,[2,3,4][n],ig,1,'Cu');const r1=put('rad','Cu',null,c,3,0,0,null,2);put('rad','Cu',null,r1,1,0,0,null,2);});}
+  else if(name==='rotor'){// a hub on a 2 m mast with four 3.3 m aluminum blades: a 7 m disc that takes up to 4.9 MW
+    const m=put('mount','Fe',null,null,0,0,0,null,2);let top=m,ti=0;for(let k=0;k<4;k++){top=put('rail','Al',null,top,ti,0,0,null,2);ti=1;}const h=put('hub','Al',null,top,1,0,0,null,3);
+    for(let k=2;k<=5;k++)put('blade','Al',null,h,k,0,0,null,3);}
+  else if(name==='jet'){// a 3\u00d7 rocket chamber on its side, breathing through an air intake: about 40 kN, with 324 kg of fuel
+    const m=put('mount','Fe',null,null,0,0,0,null,2),rl=put('rail','Al',null,m,0,0,0,null,2),ch=put('chamber','Fe',null,rl,1,3,0,null,3);
+    const inj=put('injector','Fe',null,ch,0,0,0,null,3),t1=put('tank','Al','C',inj,1,0,0,null,3);put('tank','Al','C',t1,1,0,0,null,3);
+    put('intake','Al',null,ch,1,0,0,null,3);put('rad','Cu',null,ch,2,0,0,null,3);}
   else if(name==='empty'){put('mount','Fe');bn.tray='combustion';bn.item='tank';bn.tool='place';}
-  bn.name={engine:'Piston generator',rocket:'Rocket motor',emag:'Electromagnet',twin:'Twin engine',big:'Big engine',dyno:'Magnet brake',cannon:'Cannon',mg:'Machine gun',coilgun:'Coilgun',empty:''}[name]||'';$('#bName').value=bn.name;
+  bn.name={plant:'Power plant',rotor:'Lift rotor',jet:'Jet engine',engine:'Piston generator',rocket:'Rocket motor',emag:'Electromagnet',twin:'Twin engine',big:'Big engine',dyno:'Magnet brake',cannon:'Cannon',mg:'Machine gun',coilgun:'Coilgun',empty:''}[name]||'';$('#bName').value=bn.name;
   document.querySelectorAll('#bbps [data-bp]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.bp===name)));$('#bbCur').textContent=bn.name?'\u00b7 '+bn.name:'';
   relink();benchStop(true);renderBench();}
 
@@ -2679,7 +2779,7 @@ function renderBenchRead(){if(!bn.on)return;const T=bn.test,o=T?T.out:null,fmt=(
   const gs=T&&T.gun,gunRows=bn.pieces.some(p=>p.key==='breech')?row('Muzzle speed',gs?`${Math.round(gs.v)} m/s`:'\u2013')+row('Shot energy',gs?(gs.ke>=1000?`${(gs.ke/1000).toFixed(2)} MJ`:`${Math.round(gs.ke)} kJ`):'\u2013')+
     row('Reload',gs?`${gs.reload.toFixed(1)} s`:'\u2013')+row('Recoil',gs?`${gs.kick.toFixed(1)} kN`:'\u2013')+row('Traverse',gs?(gs.ring?`${Math.round(gs.trav)}\u00b0/s`:'fixed'):'\u2013')+row('Elevation',gs?(gs.hinge?`${Math.round(gs.elev)}\u00b0/s`:'level'):'\u2013')+row('Rounds',gs?`${gs.rounds} of ${gs.total}`:'\u2013'):'';
   $('#bstats').innerHTML=targetRow()+row('Pieces',bn.lines.length?`${bn.pieces.length} \u00b7 ${bn.lines.length} line${bn.lines.length>1?'s':''}`:bn.pieces.length)+row('Mass',`${mass.toFixed(1)} kg`)+gunRows+(gunRows?'':row('Motion out',o?fmt(o.mech,0,'kW'):'\u2013')+row('Power out',o?fmt(o.elec,0,'kW'):'\u2013'))+
-    (gunRows?'':row('Thrust',o?fmt(o.thrust,2,'kN'):'\u2013')+row('Field',o?fmt(o.field,2,'T'):'\u2013')+row('Fuel use',o?fmt(o.fuel,1,'kg/min'):'\u2013'))+
+    (gunRows?'':row('Thrust',o?fmt(o.thrust,2,'kN'):'\u2013')+(bn.pieces.some(p=>p.key==='hub')?row('Rotor lift',o?fmt(o.lift,1,'kN'):'\u2013')+row('Rotor',(()=>{const h=bn.pieces.find(p=>p.key==='hub'),G2=benchRotor(h);return G2.n?`${G2.R.toFixed(1)} m \u00b7 ${G2.n} blades \u00b7 takes ${Math.round(G2.cap)} kW`:'no blades';})()):'')+row('Field',o?fmt(o.field,2,'T'):'\u2013')+row('Fuel use',o?fmt(o.fuel,1,'kg/min'):'\u2013'))+
     (bn.pieces.some(p=>PERM.includes(p.key)||p.key==='coil')?row('Holds',o&&o.pull>.5?`${o.pull>=100?Math.round(o.pull):o.pull.toFixed(1)} kg`:'\u2013')+row('Reach',o&&o.reach>.002?`${Math.round(o.reach*100)} cm`:'\u2013'):'')+
     (bn.pieces.some(p=>p.key==='brake')?row('Brake load',o?fmt(o.brake,0,'kW'):'\u2013'):'')+(bn.pieces.some(p=>p.key==='cyl')?row('Misfires',o?`${Math.round(o.mis*100)}%`:'\u2013'):'');
   const rows=benchChecklist(),glyph={ok:'\u2713',no:'\u2717',warn:'!'};
@@ -2853,63 +2953,9 @@ Object.assign(PD,{
     desc:'Spare shells for a 2\u00d7 gun like the tank cannon. Only a 2\u00d7 ammo belt carries them.',build:(g)=>rackModel(g,true)}});
 TRAY.parts.push('rack','rack2');
 
-/* =========================================================
-   BIG POWER AND FLIGHT - a reactor and heavy tracks for big
-   builds, and rotors, jets and wings for things that fly.
-   Rotors take a drive shaft like a wheel and turn its power
-   into lift. Jets push. Wings lift more the faster you go.
-   ========================================================= */
-const FLY_CD=.0012;   // air drag: top air speed is where push and drag balance
-function reactorModel(g,r){
-  dkB(g,2.44,.22,2.44,DK.slate,0,.11,0);dkB(g,2.48,.05,2.48,DK.yel,0,.24,0,0,0,0,true);
-  // the vessel: a glass drum with the core glowing inside, held in a white frame
-  dkC(g,.9,.9,.16,20,DK.white,0,.34,0);dkC(g,.9,.9,.16,20,DK.white,0,1.66,0);fa(g,fC(.82,.82,1.16,20),DKG.glass,0,1.0,0,0,0,0,true);
-  r.core=fa(g,fC(.42,.42,1.1,14),DKG.core,0,1.0,0,0,0,0,true);fa(r.core,fC(.24,.24,1.14,10),DKG.coreHot,0,0,0,0,0,0,true);
-  for(let k=0;k<6;k++){const a=k/6*TAU;dkB(g,.1,1.3,.1,DK.navy,Math.cos(a)*.86,1.0,Math.sin(a)*.86);}
-  dkC(g,.62,.9,.3,20,DK.panel,0,1.89,0);dkC(g,.3,.3,.14,12,DK.navy,0,2.1,0);
-  // four cooling stacks
-  for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*.92,z=sz*.92;dkC(g,.2,.24,1.5,10,DK.panel,x,.98,z);for(let n=0;n<4;n++)dkC(g,.27,.27,.05,10,DK.navy,x,.45+n*.3,z,0,0,0,true);
-    dkC(g,.22,.22,.06,10,DK.yel,x,1.75,z,0,0,0,true);dkHose(g,[[x*.78,1.45,z*.78],[x*.62,1.7,z*.62],[x*.5,1.82,z*.5]],.05,DK.metal,6,5);}
-  dkHazard(g,2.2,.16,0,.34,1.226);dkLabel(g,'REACTOR · 12 MW',0,.11,1.226,.1,0,'#ffcf4a');
-  r.spinY=dkRig(g,0,2.2,0);for(let k=0;k<4;k++)dkB(r.spinY,.07,.03,.5,DK.metal,0,0,0,0,k*Math.PI/4,0,true);
-  r.led=fa(g,fS(.06,8,6),LG_OFF,.7,.34,1.0,0,0,0,true);r.led.userData.keep=true;}
-function htrackModel(g,r){const s=fg(g);s.scale.setScalar(1.8);trackModel(s,r,5,6);r.rad=.3*1.8;dkB(g,.22,.5,1.2,DK.navy,.08,.12,0);}
-// S scales the hub and blades; the heavy rotor is a 12 m disc on a 3 m mast
-function rotorModel(g,r,S){const h=S>1?2.85:1.75,L=S>1?6:3.6;
-  dkB(g,.44*S,.1,.44*S,DK.navy,0,.05,0);dkC(g,.22*S,.26*S,.36,12,DK.slate,0,.28,0);dkC(g,.08*S,.09*S,h-.4,8,DK.metal,0,.3+(h-.4)/2,0);
-  dkC(g,.17*S,.17*S,.1,12,DK.yel,0,h-.3,0,0,0,0,true);dkLabel(g,S>1?'HEAVY ROTOR':'ROTOR',0,.28,.27*S,.06,0,'#ffcf4a');
-  r.rotor=dkRig(g,0,h,0);dkC(r.rotor,.15*S,.15*S,.16,10,DK.navy,0,0,0);dkS(r.rotor,.09*S,DK.coral,0,.12,0,true);
-  for(let k=0;k<4;k++){const b=fg(r.rotor,0,0,0,0,k*Math.PI/2,0);dkB(b,.3*S,.04,L-.42,DK.white,0,0,.12+(L-.42)/2,0,0,.07);dkB(b,.31*S,.046,.3,DK.yel,0,0,L-.15,0,0,.07,true);}}
-function jetModel(g,r){dkB(g,.36,.06,.6,DK.navy,0,.03,0);dkB(g,.1,.26,.5,DK.slate,0,.17,0);
-  dkC(g,.3,.26,1.25,14,DK.white,0,.55,-.05,Math.PI/2,0,0);dkC(g,.32,.32,.12,14,DK.yel,0,.55,.56,Math.PI/2,0,0,true);
-  dkC(g,.2,.2,.04,10,DK.navy,0,.55,.6,Math.PI/2,0,0,true);r.spinZ=dkRig(g,0,.55,.63);for(let k=0;k<6;k++)dkB(r.spinZ,.05,.38,.02,DK.metal,0,0,0,0,0,k*Math.PI/6,true);
-  dkC(g,.24,.17,.22,12,DK.slate,0,.55,-.78,Math.PI/2,0,0);dkLabel(g,'JET',.302,.62,0,.09,Math.PI/2,'#2e3446');
-  const fl=fa(g,fCo(.16,.9,10),vFlameMat,0,.55,-1.34,-Math.PI/2,0,0,true);fl.visible=false;r.flames=[fl];}
-function wingModel(g){dkB(g,.14,.3,.9,DK.navy,.07,0,0);const w=fg(g,0,0,0,0,0,.05);   // a little dihedral
-  dkB(w,1.5,.1,1.4,DK.white,.85,0,0);dkB(w,1.35,.08,1.0,DK.white,2.27,0,-.12);dkB(w,1.5,.11,.12,DK.yel,.85,0,.7,0,0,0,true);dkB(w,1.35,.09,.1,DK.yel,2.27,0,.39,0,0,0,true);
-  dkB(w,1.1,.06,.25,DK.navy,2.2,0,-.66,0,0,0,true);dkLamp(w,2.92,.07,-.1,.05,'red','blink',1.1);}
-Object.assign(PD,{
-  reactor:{name:'Fusion reactor',mount:'top',foot:{a:[-2,2],b:[-2,2],n:[0,3]},mass:14,power:12000,selfFed:true,fuel:9000,eout:3000,vent:true,stat:'12 MW · own fuel · 5 × 5 cells',
-    desc:'A power plant in a box: 12 MW from its own fuel core, so it needs no tank. Two 4× drive shafts and a 3× power cable come off it, enough for heavy tracks or heavy rotors. It needs a clear 5 × 5 deck and air above it.',build:(g,r)=>reactorModel(g,r)},
-  htrack:{name:'Heavy track',mount:'side',foot:{n:[0,2],b:[-2,1],a:[-9,9]},mass:7,drive:'track',stat:'9.5 m · 4× shaft · 6.4 MW',
-    desc:'The game track scaled up 1.8 times for big hulls. Its 4× shaft takes up to 6.4 MW. Mount it on a side socket two blocks up so it reaches the ground.',build:(g,r)=>htrackModel(g,r)},
-  rotor:{name:'Lift rotor',mount:'top',foot:{a:[0,0],b:[0,0],n:[0,3]},mass:1.6,drive:'rotor',lift:40,lpow:1600,sweep:{r:3.6,layer:3},gunH:1.75,stat:'25 t of lift per MW · up to 40 t',
-    desc:'A helicopter rotor on a 2 m mast. Run a drive shaft to it from an engine: every MW it gets lifts 25 t. Its blades need a clear circle 7 m across at the top of the mast.',build:(g,r)=>rotorModel(g,r,1)},
-  hrotor:{name:'Heavy rotor',mount:'top',foot:{a:[0,0],b:[0,0],n:[0,5]},mass:5,drive:'rotor',lift:160,lpow:6400,sweep:{r:6,layer:5},gunH:2.85,stat:'25 t of lift per MW · up to 160 t',
-    desc:'A huge rotor on a 3 m mast, for flying fortresses. Its 4× shaft takes up to 6.4 MW, so it needs a reactor. Its blades sweep a circle 12 m across.',build:(g,r)=>rotorModel(g,r,1.6)},
-  jet:{name:'Jet engine',mount:'top',foot:{a:[0,0],b:[-1,1],n:[0,1]},mass:1.4,thrust:45,fuelDem:500,fuelUse:40,tdir:[0,0,1],plume:[0,0,-1],plumeLen:3,kick:3,vent:true,stat:'45 kN · 1 × 3 cells',
-    desc:'A turbojet. It burns fuel from a hose and pushes 45 kN, enough to fly with a pair of wings. W opens the throttle. Its exhaust needs 3 clear cells behind it. Turn it with R.',build:(g,r)=>jetModel(g,r)},
-  wing:{name:'Wing',mount:'side',foot:{n:[0,5],b:[0,0],a:[-1,1]},mass:.6,wing:.0035,stat:'Lift grows with speed · 3 m span',
-    desc:'A 3 m wing. The faster you go, the more it lifts: a pair lifts about 17 t at 180 km/h. Wings need a jet to push them, and wheels to take off on.',build:(g)=>wingModel(g)}});
-TRAY.parts.push('reactor','htrack','rotor','hrotor','jet','wing');
 
 /* ---------- ports and slots on the built-in parts, in each part's own frame: [kind, where, facing, size] ---------- */
 const BPORT={
-  reactor:[['M',[1.22,.6,0],[1,0,0],4],['M',[-1.22,.6,0],[-1,0,0],4],['E',[0,.6,-1.22],[0,0,-1],3]],
-  htrack:[['M',[.09,.65,0],[0,1,0],4],['E',[.09,.65,.9],[0,1,0],2]],
-  rotor:[['M',[.26,.22,0],[1,0,0],2],['E',[-.26,.22,0],[-1,0,0],2]],
-  hrotor:[['M',[.42,.22,0],[1,0,0],4],['E',[-.42,.22,0],[-1,0,0],2]],
-  jet:[['F',[.18,.17,0],[1,0,0],1]],
   piston:[['F',[0,.12,-.5],[0,0,-1],1],['M',[.42,.62,-.06],[1,0,0],1],['M',[-.42,.62,-.06],[-1,0,0],1],['E',[.35,.12,.5],[0,0,1],1]],
   turbine:[['F',[0,.12,-.66],[0,0,-1],2],['M',[.47,.63,0],[1,0,0],2],['M',[-.47,.63,0],[-1,0,0],2],['E',[.25,.4,1.05],[0,0,1],1]],
   can:[['F',[.21,.3,0],[1,0,0],1]],
@@ -2939,7 +2985,7 @@ Object.assign(PD.piston,{eout:20});Object.assign(PD.turbine,{eout:40});Object.as
 /* ---------- roles: who gives and who takes on each kind of line ---------- */
 const isEng=(d)=>(d.power||0)>0||(d.thrust||0)>0;
 const partHasT=(p,t)=>!!(p.r.ports&&p.r.ports.some(q=>q.t===t));
-function mSrc(p){const d=p.def;if(d.custom)return d.mech||0;return p.key==='piston'||p.key==='turbine'||p.key==='reactor'?d.power:0;}
+function mSrc(p){const d=p.def;if(d.custom)return d.mech||0;return p.key==='piston'||p.key==='turbine'?d.power:0;}
 function eSrc(p){const d=p.def;if(d.custom)return d.eout||0;return d.eout||0;}
 function eUse(p){const d=p.def;if(p.key==='emag')return d.draw||20;if(d.custom&&d.elec==='use')return d.draw||0;return 0;}
 function roleOf(p,t){const d=p.def;
@@ -3017,12 +3063,12 @@ function netSolve(){const R={ff:new Map(),dflow:new Map(),efrac:new Map(),lineFl
   // fuel: stores give as much as the hoses carry; each engine wants fuel for its full power
   const Fg=netGraph(['F']),sinks=[];
   for(const p of PARTS){const d=p.def;
-    if(isEng(d)){if(p.dmg==='out')continue;R.eng.push(p);if((d.custom||d.selfFed)&&d.fuel>0){R.ff.set(p,1);continue;}if(!partHasT(p,'F')){R.ff.set(p,0);continue;}
+    if(isEng(d)){if(p.dmg==='out')continue;R.eng.push(p);if(d.custom&&d.fuel>0){R.ff.set(p,1);continue;}if(!partHasT(p,'F')){R.ff.set(p,0);continue;}
       const dem=d.fuelDem||(d.power>0?d.power:d.thrust*200);sinks.push({p,dem,e:Fg.N.edge(Fg.hubOf(p,'F'),1,dem)});}
     else if(d.fuel>0&&partHasT(p,'F')&&p.dmg!=='holed')Fg.N.edge(0,Fg.hubOf(p,'F'),Infinity);}
   Fg.N.run();for(const s of sinks)R.ff.set(s.p,clamp(s.e.f/s.dem,0,1));for(const [l,e] of Fg.Lk)R.lineFlow.set(l,Math.abs(e.f));
   const fc=netComp('F'),fed=new Set(R.eng.filter(p=>(R.ff.get(p)||0)>0).map(p=>fc(p)));
-  for(const p of PARTS){const d=p.def;if(isEng(d)){if((d.custom||d.selfFed)&&d.fuel>0&&!(d.thrust&&!d.power)&&p.dmg!=='out')R.fuel+=d.fuel;continue;}
+  for(const p of PARTS){const d=p.def;if(isEng(d)){if(d.custom&&d.fuel>0&&!(d.thrust&&!d.power))R.fuel+=d.fuel;continue;}
     if(d.fuel>0&&p.dmg!=='holed'){if(fed.has(fc(p)))R.fuel+=d.fuel;else R.storeLoose.push(p);}}
   // power and motion: parts that need power are served first, then the wheels and tracks take what's left
   const Pg=netGraph(['E','M']),eS=[],dS=[];
@@ -3387,24 +3433,24 @@ function startDrive(){if(bn.on)return;const A=updateReadout();if(!A.ready){toast
   body.position.set(0,0,0);bay.position.set(0,0,0);bay.rotation.set(0,0,0);bay.updateMatrixWorld(true);
   let m=0;const com=new V3();for(const b of BL.values()){const w=BT[b.type].mass;com.x+=b.i*G*w;com.z+=b.k*G*w;m+=w;}
   for(const p of PARTS){const w=p.def.mass,q=p.g.getWorldPosition(new V3());com.x+=q.x*w;com.z+=q.z*w;m+=w;}com.multiplyScalar(1/m);
-  const box=new THREE.Box3();let minY=1e9;for(const p of PARTS)if(p.def.drive){box.setFromObject(p.m);minY=Math.min(minY,box.min.y);}
-  box.setFromObject(body);const len=box.max.z-box.min.z,wid=box.max.x-box.min.x;
+  const box=new THREE.Box3();let minY=1e9;for(const p of PARTS)if(p.def.drive&&p.def.drive!=='rotor'){box.setFromObject(p.m);minY=Math.min(minY,box.min.y);}
+  box.setFromObject(body);if(minY>1e8)minY=box.min.y;const len=box.max.z-box.min.z,wid=box.max.x-box.min.x;
   for(const p of PARTS){p.side=Math.round(Math.cos(mountTheta(p.def,p.face,p.rot)))||1;const q=p.g.getWorldPosition(new V3());p.xo=q.x-com.x;p.zo=q.z-com.z;p.rec=0;p.aim=0;p.pit=0;
     p.hold=p.def.kick>0?holdOf(p):0;p.torn=false;p.tv=null;p.bfuel=p.def.fuel||0;
     // which way a booster pushes along the hull (the hull drives toward +z)
     if(p.def.tdir){const th=mountTheta(p.def,p.face,p.rot),[x,y,z]=p.def.tdir;p.fwd=-x*Math.sin(th)+z*Math.cos(th);p.up=y;}}
   drv.info={A,com,minY,len,wid,hgt:box.max.y-minY,cannons:PARTS.filter(p=>p.def.weapon==='cannon'),mgs:PARTS.filter(p=>p.def.weapon==='mg'),
     engines:PARTS.filter(p=>p.def.power),drives:PARTS.filter(p=>p.def.drive&&p.def.drive!=='rotor'),rotors:PARTS.filter(p=>p.def.drive==='rotor'),turn:A.tracks?.95:1.9,
-    fly:A.canFly?{lift:A.liftT-A.vthr/9.8,wingK:A.wingK,cd:FLY_CD,climb:A.liftT>0?7:5,ceil:320,vtop:A.vair,rad:A.rotR||0}:null,
+    fly:A.canFly?{AE:A.AE,rotT:A.rotT,Tj:A.Tj,disc:A.disc,rad:A.rotR||0,ceil:400}:null,
     boosters:PARTS.filter(p=>p.def.thrust>0&&p.runs!==false),mags:PARTS.filter(p=>p.def.mag>0&&!p.def.weapon&&!p.def.power),guns:PARTS.filter(p=>p.def.weapon==='gun'&&p.r.mz&&p.dmg!=='out')};
   // spare rounds: racks joined to a gun by an ammo belt refill its magazine as it fires
   for(const r of PARTS)if(r.def.rack)r.left=r.def.rack.n;
   for(const p of drv.info.guns){p.ammo=p.def.gun.rounds;p.reload=0;p.pit=0;p.dry=false;p.feed=0;p.racks=(A.net&&A.net.ammo.get(p))||[];}
   drv.magOn=true;drv.noteAl=false;drv.notePick=false;drv.held=0;drv.boost=false;for(const sc of SCRAP)resetScrap(sc);
   body.position.set(-com.x,-minY,-com.z);
-  Object.assign(drv,{x:0,z:0,y:0,vy:0,air:false,spool:0,hard:0,yaw:0,spd:0,yawRate:0,pitch:0,roll:0,fuel:A.fuel,fuelMax:A.fuel,camYaw:0,camPitch:.08,camD:clamp(Math.max(len,wid)*1.6+4,8,A.canFly?70:60),cool:0,mgCool:0,thr:0,steer:0,keys:{},fire:false,mgHold:false});
+  Object.assign(drv,{x:0,z:0,y:0,vx:0,vz:0,vy:0,air:false,spool:0,hard:0,thrJ:0,theta:0,phi:0,vt:0,stall:false,yaw:0,spd:0,yawRate:0,pitch:0,roll:0,fuel:A.fuel,fuelMax:A.fuel,camYaw:0,camPitch:.08,camD:clamp(Math.max(len,wid)*1.6+4,8,A.canFly?70:60),cool:0,mgCool:0,thr:0,steer:0,keys:{},fire:false,mgHold:false});
   state.mode='drive';setUi();updateDriveHint();document.querySelectorAll('#touchPad .fly').forEach(e=>e.hidden=!drv.info.fly);$('#touchPad').classList.toggle('flying',!!drv.info.fly);
-  toast(drv.info.fly?(A.hover?'Hold Space to lift off, C to come down. Fly out to the targets.':`Hold W to speed up. At ${Math.round(A.vto*3.6)} km/h, hold Space to pull up.`):'Drive out to the targets. Each hit knocks one down.','',drv.info.fly?5:2.4);}
+  toast(drv.info.fly?(A.hover?'Hold Space to lift off and C to come down. W tilts the rotor to fly forward.':`Hold W to open the throttle. Past ${Math.round(A.vto*3.6)} km/h, hold Space to pull up.`):'Drive out to the targets. Each hit knocks one down.','',drv.info.fly?5:2.4);}
 function endDrive(){if(state.mode!=='drive')return;try{if(document.pointerLockElement)document.exitPointerLock();}catch(e){}
   state.mode='build';bay.position.set(0,0,0);bay.rotation.set(0,0,0);body.position.set(0,0,0);
   for(const p of PARTS){if(p.r.rotor)p.r.rotor.rotation.y=0;if(p.r.yaw)p.r.yaw.rotation.y=0;if(p.r.tilt)p.r.tilt.rotation.x=0;if(p.r.gun){p.r.gun.rotation.x=0;p.r.gun.position.z=p.r.gun0;}if(p.r.wg)p.r.wg.rotation.y=0;
@@ -3426,7 +3472,7 @@ function drivePointerUp(e){if(document.pointerLockElement===view){if(e.button===
   if(drv.drag&&!drv.drag.moved&&drv.lockFailed&&!drv.drag.touch)fireOnce(drv.drag.btn===2);drv.drag=null;}
 function updateDriveHint(){if(state.mode!=='drive')return;const lk=document.pointerLockElement===view;
   const I=drv.info,xtra=I?(I.boosters.length&&!I.fly?' · <kbd>Shift</kbd> boost':'')+(I.mags.some(isElectro)?' · <kbd>Q</kbd> magnet':''):'';
-  const fly=I&&I.fly,mv=fly?'<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly · <kbd>Space</kbd> climb · <kbd>C</kbd> descend':'<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake';
+  const fly=I&&I.fly,mv=fly?(fly.rotT>0?'<kbd>W</kbd><kbd>S</kbd> tilt · <kbd>A</kbd><kbd>D</kbd> turn · <kbd>Space</kbd> climb · <kbd>C</kbd> descend':'<kbd>W</kbd><kbd>S</kbd> throttle · <kbd>A</kbd><kbd>D</kbd> bank · <kbd>Space</kbd> pull up · <kbd>C</kbd> push down'):'<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake';
   $('#dHint').innerHTML=isTouch?(fly?'Arrows fly · Up and Down climb and descend · drag to aim · Fire shoots':'Arrows drive · drag to aim · Fire shoots'):lk?mv+' · mouse aims · click fires'+xtra+' · <kbd>E</kbd> back to the bay':
     drv.lockFailed?mv+' · drag to aim · click fires'+xtra+' · <kbd>E</kbd> back to the bay':'Click the view to aim with the mouse · '+mv+xtra+' · <kbd>E</kbd> back to the bay';}
 document.querySelectorAll('#touchPad button').forEach(b=>{const k=b.dataset.k;
@@ -3434,90 +3480,123 @@ document.querySelectorAll('#touchPad button').forEach(b=>{const k=b.dataset.k;
   for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>{if(k==='fire')drv.fire=false;else drv.keys[k]=false;});});
 
 const _a=new V3(),_b=new V3(),_q=new THREE.Quaternion();
-/* ---------- flight: rotors and rockets lift on the spot, wings lift with speed, jets push ---------- */
-function flyStep(dt,fw,bk,lf,rt,hasFuel){const I=drv.info,F=I.fly,A=I.A,k=drv.keys,m=Math.max(.2,A.mass),g=9.8;
-  const up=k.Space?1:0,dn=(k.KeyC||k.ControlLeft)?1:0,boostK=!!(k.ShiftLeft||k.ShiftRight);
-  // jets and rockets: W or Shift opens the throttle, and rockets that point up fire to hold you up. One that isn't held on tears loose.
-  let aT=0,aV=0;drv.boost=false;
-  for(const p of I.boosters){const on=hasFuel&&!p.torn&&(((p.fwd||0)>.3&&(fw||boostK))||((p.up||0)>.3&&(up||drv.air)))&&(p.def.fuel>0?p.bfuel>0:true);
-    for(const f of p.r.flames||[]){f.visible=on;if(on){const q=.8+Math.random()*.4;f.scale.set(q,.8+Math.random()*.5,q);}}
-    if(!on)continue;
-    if(p.def.kick>p.hold){tearOff(p,`The ${p.def.name} pushed ${p.def.kick.toFixed(1)} kN and tore off its socket, which held only ${p.hold.toFixed(1)} kN. Weld more blocks around it.`);continue;}
-    drv.boost=true;aT+=p.def.thrust*(p.fwd||0)/m;aV+=p.def.thrust*Math.max(0,p.up||0)/m;
-    const use=(p.def.fuelUse||1)/60*dt;if(p.def.fuel>0)p.bfuel=Math.max(0,p.bfuel-use);else drv.fuel=Math.max(0,drv.fuel-use);
-    if(Math.random()<dt*10){p.m.getWorldPosition(_a);puff(_a,0xdfe5ec,.25,1.1,.7,.35,.2);}}
-  const v=drv.spd,fx=Math.sin(drv.yaw),fz=Math.cos(drv.yaw),lx=Math.cos(drv.yaw),lz=-Math.sin(drv.yaw),hl=I.len*.4,hw=I.wid*.4;
+/* ---------- flight: real forces on the airframe every step ----------
+   Rotors: Space and C ask for a climb rate and the collective finds the thrust for it, up to what the engines give;
+   W and S tilt the rotor to fly forward and back, A and D turn. Wings: W and S open and close the jet throttle,
+   Space and C pitch up and down, A and D bank into a turn. A wing lifts ½ρv²·S·CL, and CL stops at its stall limit. */
+function flyStep(dt,fw,bk,lf,rt,hasFuel){const I=drv.info,F=I.fly,A=I.A,k=drv.keys,m=Math.max(200,A.mass*1000),g=GRAV,AE=F.AE,Wt=m*g;
+  const up=k.Space?1:0,dn=(k.KeyC||k.ControlLeft)?1:0,boostK=!!(k.ShiftLeft||k.ShiftRight),wings=AE.S>0,rotors=F.rotT>0;
+  const fx=Math.sin(drv.yaw),fz=Math.cos(drv.yaw),lx=Math.cos(drv.yaw),lz=-Math.sin(drv.yaw),hl=I.len*.4,hw=I.wid*.4;
   const hF=groundAt(drv.x+fx*hl,drv.z+fz*hl),hB=groundAt(drv.x-fx*hl,drv.z-fz*hl),hL=groundAt(drv.x+lx*hw,drv.z+lz*hw),hR=groundAt(drv.x-lx*hw,drv.z-lz*hw);
-  const gy=Math.max((hF+hB+hL+hR)/4,groundAt(drv.x,drv.z)),onGround=drv.y<=gy+.02;
-  // lift on call: rotors as they spool up, rockets pointing up, and wings as air flows over them. Space and C set how fast to climb; let go and it holds its height.
-  const aRot=F.lift*g/m*drv.spool,aUp=aRot+F.wingK*v*v*g/m+aV,tvy=(up-dn)*F.climb;
-  let ay=clamp(g+(tvy-drv.vy)*2.2,0,aUp)-g;if(onGround&&ay<0)ay=0;drv.vy+=ay*dt;
-  let ah;
-  if(!onGround||drv.vy>0){const aRotF=F.lift>0?Math.min(6,Math.max(0,aRot-g)*.5+2.5)*drv.spool:0;
-    ah=(fw-bk*.6)*aRotF+aT-F.cd*v*Math.abs(v);if(F.lift>0&&!fw&&!bk&&!aT)ah-=v*.35;}   // a rotorcraft settles into a hover when you let go
-  else{const tgt=(hasFuel?(fw-bk*.55):0)*A.vmax;   // on the ground: wheels and tracks drive, jets push, and the rest rolls or slides to a stop
-    if(A.groundOK){ah=clamp((tgt-v)/dt,-A.acc*2,A.acc);if(aT>0&&v>tgt)ah=0;}
-    else ah=-Math.sign(v)*Math.min(Math.abs(v)/dt,((A.wheels||A.tracks)?.5:5)+bk*4);
-    ah+=aT-F.cd*v*Math.abs(v);}
-  drv.spd=clamp(v+ah*dt,-25,Math.max(F.vtop*1.15,30));
-  drv.steer=lerp(drv.steer,lf-rt,1-Math.exp(-dt*6));
-  const air=drv.y>gy+.3,yk=air?(F.lift>0?.9:.8*clamp(Math.abs(drv.spd)/25,.25,1)):(A.tracks||(F.lift>0&&drv.spool>.5)?.9:clamp(Math.abs(drv.spd)/5,0,1)*Math.sign(drv.spd||1)*1.6);
-  drv.yawRate=drv.steer*yk;drv.yaw+=drv.yawRate*dt;
-  let nx=drv.x+Math.sin(drv.yaw)*drv.spd*dt,nz=drv.z+Math.cos(drv.yaw)*drv.spd*dt;
-  if(drv.y<gy+3){const R=Math.max(I.len,I.wid)*.42;for(const r of ROCKS){if(r.crushed)continue;const dx=nx-r.x,dz=nz-r.z,d=Math.hypot(dx,dz),mm=r.r+R;if(d<mm&&d>1e-3&&!hitRock(r,A.mass>60)){nx=r.x+dx/d*mm;nz=r.z+dz/d*mm;drv.spd*=.6;}}}
-  // the range ends at 760 m: past 660 m the autopilot banks you back toward the pad
-  const dd=Math.hypot(nx,nz),lim=760;if(dd>660){const tw=wrapA(Math.atan2(-nx,-nz)-drv.yaw);if(Math.abs(tw)>.3){drv.yaw+=clamp(tw,-1,1)*dt*clamp((dd-660)/60,.3,1.2);drv.steer=lerp(drv.steer,Math.sign(tw),dt*3);if(now()>(drv.edgeNote||0)){drv.edgeNote=now()+8;toast('The range ends here. Turning back toward the pad.','');}}}
-  if(dd>lim){nx*=lim/dd;nz*=lim/dd;if(!air)drv.spd*=.5;}
+  const gy=Math.max((hF+hB+hL+hR)/4,groundAt(drv.x,drv.z)),onGround=drv.y<=gy+.03;
+  // the jet throttle stays where you leave it: W opens it, S closes it, Shift slams it open
+  if(F.Tj>0){drv.thrJ=clamp(drv.thrJ+(fw-bk)*dt*.6,0,1);if(boostK)drv.thrJ=1;}
+  // what the jets and rockets can give this step
+  let Tj=0,TvMax=0;for(const p of I.boosters){if(p.torn||!(p.def.fuel>0?p.bfuel>0:hasFuel))continue;const T=p.def.thrust*1000;Tj+=T*Math.max(0,p.fwd||0)*drv.thrJ;TvMax+=T*Math.max(0,p.up||0);}
+  const u=drv.vx*fx+drv.vz*fz,w=drv.vx*lx+drv.vz*lz;
+  // vertical: the force it takes to hold the climb rate you ask for. Sitting on the ground, nothing pulls up until you ask.
+  drv.phi=lerp(drv.phi,wings&&!rotors&&!onGround?(lf-rt)*PHY.bankMax:0,1-Math.exp(-dt*1.6));const cphi=Math.cos(drv.phi);
+  const FvReq=onGround&&!up?0:m*(g+((up-dn)*PHY.climb-drv.vy)*1.6);
+  const q=.5*RHO*Math.max(0,u)*Math.abs(u);let CL=0,L=0;
+  if(wings&&q>1){CL=clamp(FvReq/cphi/(q*AE.S),-.4,PHY.clMax);L=q*AE.S*CL;}
+  drv.stall=wings&&!rotors&&!onGround&&FvReq>0&&q*AE.S*PHY.clMax*cphi<FvReq*.97;
+  // a rotor leans forward for W and back for S; let go and it leans back to stop
+  const tilt=rotors&&!onGround?(fw||bk?(fw-bk*.7)*PHY.tiltMax:clamp(-u*.025,-.2,.2)):0;drv.theta+=clamp(tilt-drv.theta,-dt*.7,dt*.7);
+  const cth=Math.cos(drv.theta),sth=Math.sin(drv.theta),rotTmax=F.rotT*drv.spool;
+  const T=rotors?clamp((FvReq-L*cphi)/cth,0,rotTmax):0,Tv=clamp(FvReq-L*cphi-T*cth,0,TvMax);drv.vt=TvMax>0?Tv/TvMax:0;
+  // drag: the hull's front, side and top, the wings (more when they work hard), and the rotor disc moving edgewise
+  const Dbody=.5*RHO*PHY.cdBody*AE.Af*u*Math.abs(u),Dside=.5*RHO*PHY.cdSide*(AE.Aside+AE.S*.2)*w*Math.abs(w),Dvert=.5*RHO*PHY.cdTop*(AE.Atop+AE.S)*drv.vy*Math.abs(drv.vy);
+  const Dwing=wings&&Math.abs(u)>1?.5*RHO*u*Math.abs(u)*AE.S*(PHY.cd0Wing+CL*CL/(Math.PI*AE.AR*PHY.eWing)):0,Drot=.5*RHO*PHY.cdDisc*F.disc*u*Math.abs(u);
+  let Fu=T*sth+Tj-Dbody-Dwing-Drot,Fw=-Dside-(wings&&!onGround?m*w*1.5:0),Fv=T*cth+L*cphi+Tv-Wt-Dvert;
+  let un=u+Fu/m*dt,wn=w+Fw/m*dt;
+  if(onGround){// on the ground: the drive pushes, tyres roll, skids drag, and S brakes once the throttle is shut
+    const Nf=Math.max(0,Wt-(T*cth+L*cphi+Tv)),gear=A.tracks||A.wheels,ped=hasFuel?fw-bk*.55:0;
+    if(A.groundOK&&ped&&!(Math.abs(un)>=A.vcap&&Math.sign(ped)===Math.sign(un)))un+=Math.sign(ped)*Math.min(A.dpow*1000*PHY.eta*Math.abs(ped)/Math.max(Math.abs(un),1),A.mu*Nf)/m*dt;
+    un+=g*Math.sin(drv.pitch)*dt;
+    const resist=(gear?A.crr*Nf:PHY.mu.skid*Nf)+(bk&&(!F.Tj||drv.thrJ<.05)&&!A.groundOK?A.mu*Nf:0);un=Math.sign(un)*Math.max(0,Math.abs(un)-resist/m*dt);
+    wn=Math.sign(wn)*Math.max(0,Math.abs(wn)-A.mu*Nf/m*dt);}
+  drv.vy+=Fv/m*dt;if(onGround&&drv.vy<0)drv.vy=0;
+  // turning: a banked wing curves its path; a rotor turns on its tail rotor; on the ground, the wheels or tracks steer
+  drv.steer=lerp(drv.steer,lf-rt,1-Math.exp(-dt*5));
+  const yr=!onGround?(wings&&!rotors?g*Math.tan(drv.phi)/Math.max(un,12):drv.steer*.8):drv.steer*(A.tracks?.9:rotors&&drv.spool>.5?.6:clamp(Math.abs(un)/6,0,1)*Math.sign(un||1)*.8);
+  drv.yawRate=lerp(drv.yawRate,yr,1-Math.exp(-dt*3));
+  // the velocity stays put in the world while the hull turns, so it slides until drag or grip lines it up
+  drv.vx=un*fx+wn*lx;drv.vz=un*fz+wn*lz;drv.spd=un;drv.yaw+=drv.yawRate*dt;
+  let nx=drv.x+drv.vx*dt,nz=drv.z+drv.vz*dt;
+  if(drv.y<gy+3){const R=Math.max(I.len,I.wid)*.42;for(const r of ROCKS){if(r.crushed)continue;const dx=nx-r.x,dz=nz-r.z,d=Math.hypot(dx,dz),mm=r.r+R;if(d<mm&&d>1e-3&&!hitRock(r,A.mass>60)){nx=r.x+dx/d*mm;nz=r.z+dz/d*mm;drv.vx*=.6;drv.vz*=.6;}}}
+  // the range ends 3.8 km out: past 3.4 km the autopilot banks you back toward the pad
+  const dd=Math.hypot(nx,nz),lim=3800;if(dd>3400){const tw=wrapA(Math.atan2(-nx,-nz)-drv.yaw);if(Math.abs(tw)>.3){drv.yaw+=clamp(tw,-1,1)*dt*clamp((dd-3400)/300,.3,1.2);if(now()>(drv.edgeNote||0)){drv.edgeNote=now()+8;toast('The range ends here. Turning back toward the pad.','');}}}
+  if(dd>lim){nx*=lim/dd;nz*=lim/dd;}
   drv.x=nx;drv.z=nz;drv.y+=drv.vy*dt;
   const g2=Math.max(gy,groundAt(nx,nz));
-  if(drv.y<g2){if(drv.vy<-7){drv.shake=Math.max(drv.shake,clamp(-drv.vy/14,.3,1));_a.set(drv.x,g2+.2,drv.z);puff(_a,0xe8b48a,.8,4,1.2,.5,.4);if(now()>drv.hard){drv.hard=now()+3;toast('Hard landing! Hold C lightly to come down slower.','warn');}}drv.y=g2;drv.vy=Math.max(0,drv.vy);}
+  if(drv.y<g2){const hit=-drv.vy;if(hit>6){drv.shake=Math.max(drv.shake,clamp(hit/14,.3,1));_a.set(drv.x,g2+.2,drv.z);puff(_a,0xe8b48a,.8,4,1.2,.5,.4);if(now()>drv.hard){drv.hard=now()+3;toast(hit>15?`Crash landing at ${Math.round(hit)} m/s. Ease down with C held lightly.`:'Hard landing! Hold C lightly to come down slower.','warn');}}drv.y=g2;drv.vy=Math.max(0,drv.vy);}
   if(drv.y>g2+F.ceil){drv.y=g2+F.ceil;drv.vy=Math.min(0,drv.vy);}
   drv.air=drv.y>g2+.3;
+  // how it sits: a wing flies nose up by its angle of attack and its climb; a rotor leans the way it's going
   let tp,tr;
-  if(drv.air){tp=F.lift>0?clamp(ah*.04,-.32,.32):-clamp(drv.vy/Math.max(8,Math.abs(drv.spd)),-.5,.5);tr=-drv.steer*.45*clamp(Math.abs(drv.spd)/15,.25,1);}
-  else{tp=Math.atan2(hB-hF,hl*2)-ah*.004;tr=Math.atan2(hL-hR,hw*2);}
+  if(drv.air){if(wings&&!rotors){const al=clamp(CL/liftSlope(AE.AR),-.15,.3),gam=Math.atan2(drv.vy,Math.max(Math.abs(un),6));tp=-clamp(al+gam,-.6,.6);tr=-drv.phi;}else{tp=drv.theta;tr=-drv.steer*.12-clamp(wn*.03,-.2,.2);}}
+  else{tp=Math.atan2(hB-hF,hl*2);tr=Math.atan2(hL-hR,hw*2);}
   drv.pitch=lerp(drv.pitch,tp,1-Math.exp(-dt*4));drv.roll=lerp(drv.roll,tr,1-Math.exp(-dt*4));
   bay.position.set(drv.x,drv.y,drv.z);bay.rotation.set(drv.pitch,drv.yaw,drv.roll);
-  drv.thr=drv.air?Math.max(.6,fw):fw-bk*.55;
-  if(hasFuel)drv.fuel=Math.max(0,drv.fuel-(A.power/1500*(drv.air?Math.max(.7,fw):Math.abs(drv.thr))+.04)*dt);
+  // jets and rockets burn their own fuel at the level they run; a booster that isn't held on tears loose
+  drv.boost=false;
+  for(const p of I.boosters){const lvl=(p.fwd||0)>.3?drv.thrJ:(p.up||0)>.3?drv.vt:0,ok=!p.torn&&(p.def.fuel>0?p.bfuel>0:hasFuel),on=ok&&lvl>.02;
+    for(const f of p.r.flames||[]){f.visible=on;if(on){const qq=(.5+.6*lvl)*(.85+Math.random()*.3);f.scale.set(qq,qq*(.8+Math.random()*.4),qq);}}
+    if(!on)continue;
+    if(p.def.kick*lvl>p.hold){tearOff(p,`The ${p.def.name} pushed ${(p.def.kick*lvl).toFixed(1)} kN on its mount and tore off its socket, which held only ${p.hold.toFixed(1)} kN. Weld more blocks around it.`);continue;}
+    drv.boost=true;const use=(p.def.fuelUse||1)/60*lvl*dt;if(p.def.fuel>0)p.bfuel=Math.max(0,p.bfuel-use);else drv.fuel=Math.max(0,drv.fuel-use);
+    if(Math.random()<dt*10*lvl){p.m.getWorldPosition(_a);puff(_a,0xdfe5ec,.25,1.1,.7,.35,.2);}}
+  // engines: a rotor needs power in proportion to its thrust to the 3/2
+  const load=rotors?Math.max(.15,Math.pow(T/Math.max(1,F.rotT),1.5)):Math.max(.1,Math.abs(fw-bk*.55));drv.thr=load;
+  if(hasFuel)drv.fuel=Math.max(0,drv.fuel-A.power/9000*load*dt);
   // downwash: dust blows out from under the rotors near the ground
-  const alt=drv.y-g2;if(F.rad>0&&alt<12&&drv.spool>.3&&Math.random()<dt*24){const a=Math.random()*TAU,r=F.rad*(.5+Math.random()*.7);_a.set(drv.x+Math.cos(a)*r,0,drv.z+Math.sin(a)*r);_a.y=groundAt(_a.x,_a.z)+.2;
+  const alt=drv.y-g2;if(F.rad>0&&alt<12&&drv.spool>.3&&T>0&&Math.random()<dt*24){const a=Math.random()*TAU,r=F.rad*(.5+Math.random()*.7);_a.set(drv.x+Math.cos(a)*r,0,drv.z+Math.sin(a)*r);_a.y=groundAt(_a.x,_a.z)+.2;
     const f=puff(_a,0xe8b48a,.4,2.4,1,.42*(1-alt/12),.3);f.v.set(Math.cos(a)*5,.3,Math.sin(a)*5);}}
 function updateDrive(dt){const I=drv.info,A=I.A,k=drv.keys;
   const fw=(k.KeyW||k.ArrowUp)?1:0,bk=(k.KeyS||k.ArrowDown)?1:0,lf=(k.KeyA||k.ArrowLeft)?1:0,rt=(k.KeyD||k.ArrowRight)?1:0,brake=!!k.Space;
   const hasFuel=drv.fuel>0;let fx=Math.sin(drv.yaw),fz=Math.cos(drv.yaw);
   drv.spool=lerp(drv.spool||0,hasFuel?1:0,1-Math.exp(-dt*(hasFuel?.9:.5)));
   if(I.fly){flyStep(dt,fw,bk,lf,rt,hasFuel);fx=Math.sin(drv.yaw);fz=Math.cos(drv.yaw);}else{
-  drv.thr=hasFuel?(fw-bk*.55):0;
-  const target=drv.thr*A.vmax,acc=A.acc;let a=0;
-  if(brake)a=-Math.sign(drv.spd)*Math.min(Math.abs(drv.spd)/dt,acc*3);
-  else{const d=target-drv.spd;a=clamp(d/dt,-acc*(target===0?1.2:2),acc);}
-  // rocket boost: thrust along the hull adds speed on top of the engine. A booster that isn't held on tears loose.
-  const boosting=!!(k.ShiftLeft||k.ShiftRight)&&I.boosters.length>0;let bacc=0;drv.boost=false;
+  // the pedal: the drive pushes with its power over its speed, never harder than the tracks or tyres can grip
+  const m=Math.max(200,A.mass*1000),g=GRAV,v0=drv.spd;drv.thr=lerp(drv.thr,hasFuel?(fw-bk*.55):0,1-Math.exp(-dt*4));
+  const Nf=m*g*Math.cos(drv.pitch),grip=A.mu*Nf;let Fd=0;
+  if(!drv.air&&A.groundOK&&Math.abs(drv.thr)>.01){Fd=Math.sign(drv.thr)*Math.min(A.dpow*1000*PHY.eta*Math.abs(drv.thr)/Math.max(Math.abs(v0),1),grip);if(Math.abs(v0)>=A.vcap&&Math.sign(Fd)===Math.sign(v0))Fd=0;}
+  // rocket boost: thrust along the hull on top of the drive. A booster that isn't held on tears loose.
+  const boosting=!!(k.ShiftLeft||k.ShiftRight)&&I.boosters.length>0;let Fb=0;drv.boost=false;
   for(const p of I.boosters){const on=boosting&&!p.torn&&(p.def.fuel>0?p.bfuel>0:drv.fuel>0);for(const f of p.r.flames||[]){f.visible=on;if(on){const q=.8+Math.random()*.4;f.scale.set(q,.8+Math.random()*.5,q);}}
     if(!on)continue;
-    if(p.def.kick>p.hold){tearOff(p,`The ${p.def.name} pushed ${p.def.kick.toFixed(1)} kN and tore off its socket, which held only ${p.hold.toFixed(1)} kN. Weld more blocks around it.`);continue;}
-    drv.boost=true;bacc+=p.def.thrust*(p.fwd||0)/Math.max(.2,A.mass);const use=(p.def.fuelUse||1)/60*dt;if(p.def.fuel>0)p.bfuel=Math.max(0,p.bfuel-use);else drv.fuel=Math.max(0,drv.fuel-use);
+    if(p.def.kick>p.hold){tearOff(p,`The ${p.def.name} pushed ${p.def.kick.toFixed(1)} kN on its mount and tore off its socket, which held only ${p.hold.toFixed(1)} kN. Weld more blocks around it.`);continue;}
+    drv.boost=true;Fb+=p.def.thrust*1000*(p.fwd||0);const use=(p.def.fuelUse||1)/60*dt;if(p.def.fuel>0)p.bfuel=Math.max(0,p.bfuel-use);else drv.fuel=Math.max(0,drv.fuel-use);
     if(Math.random()<dt*14){p.m.getWorldPosition(_a);puff(_a,0xdfe5ec,.2,.9,.8,.4,.3);}}
-  if(drv.boost&&a<0&&drv.spd>target)a=0;
-  drv.spd+=a*dt;if(bacc){drv.spd=clamp(drv.spd+bacc*dt,-Math.max(A.vmax,8),Math.max(A.vmax*1.8,22));drv.shake=Math.max(drv.shake,.12);}
+  if(drv.boost)drv.shake=Math.max(drv.shake,.12);
+  // slopes pull you down them; air drag grows with the square of speed
+  let vn=v0+(Fd+Fb+(drv.air?0:m*g*Math.sin(drv.pitch))-.5*RHO*A.CdA*v0*Math.abs(v0))/m*dt;
+  // rolling resistance, the brake and engine braking slow you down but never push you backwards
+  const resist=drv.air?0:A.crr*Nf+(brake?grip*.9:0)+(A.groundOK&&Math.abs(drv.thr)<.05?A.crr*Nf:0);vn=Math.sign(vn)*Math.max(0,Math.abs(vn)-resist/m*dt);
+  drv.spd=vn;const a=(vn-v0)/dt;
+  // steering: tracks pivot, wheels follow a circle, and either can only pull so hard sideways before they slide
   drv.steer=lerp(drv.steer,lf-rt,1-Math.exp(-dt*8));
-  const turnK=A.tracks?1:clamp(Math.abs(drv.spd)/5,0,1)*Math.sign(drv.spd||1);
-  drv.yawRate=drv.steer*I.turn*turnK*(hasFuel||Math.abs(drv.spd)>.5?1:0);drv.yaw+=drv.yawRate*dt;
+  const sp=Math.abs(vn),gripTurn=A.mu*g/Math.max(sp,.5),Rmin=Math.max(3,I.len*1.1);
+  const yr=A.tracks?drv.steer*I.turn:drv.steer*Math.min(sp/Rmin,I.turn)*Math.sign(vn||1);
+  if(!drv.air)drv.yawRate=(hasFuel||sp>.5)?clamp(yr,-gripTurn,gripTurn):0;drv.yaw+=drv.yawRate*dt;
   let nx=drv.x+Math.sin(drv.yaw)*drv.spd*dt,nz=drv.z+Math.cos(drv.yaw)*drv.spd*dt;
-  const R=Math.max(I.len,I.wid)*.42;for(const r of ROCKS){if(r.crushed)continue;const dx=nx-r.x,dz=nz-r.z,d=Math.hypot(dx,dz),m=r.r+R;if(d<m&&d>1e-3&&!hitRock(r,A.mass>60)){nx=r.x+dx/d*m;nz=r.z+dz/d*m;drv.spd*=.6;}}
+  const R=Math.max(I.len,I.wid)*.42;for(const r of ROCKS){if(r.crushed)continue;const dx=nx-r.x,dz=nz-r.z,d=Math.hypot(dx,dz),m2=r.r+R;if(d<m2&&d>1e-3&&!hitRock(r,A.mass>60)){nx=r.x+dx/d*m2;nz=r.z+dz/d*m2;drv.spd*=.6;}}
   const lim=280,dd=Math.hypot(nx,nz);if(dd>lim){nx*=lim/dd;nz*=lim/dd;drv.spd*=.5;}
   drv.x=nx;drv.z=nz;
   fx=Math.sin(drv.yaw);fz=Math.cos(drv.yaw);const lx=Math.cos(drv.yaw),lz=-Math.sin(drv.yaw),hl=I.len*.4,hw=I.wid*.4;
   const hF=groundAt(drv.x+fx*hl,drv.z+fz*hl),hB=groundAt(drv.x-fx*hl,drv.z-fz*hl),hL=groundAt(drv.x+lx*hw,drv.z+lz*hw),hR=groundAt(drv.x-lx*hw,drv.z-lz*hw);
-  drv.y=Math.max((hF+hB+hL+hR)/4,groundAt(drv.x,drv.z));
-  const tp=Math.atan2(hB-hF,hl*2)-a*.004,tr=Math.atan2(hL-hR,hw*2)+drv.yawRate*drv.spd*.006;
-  drv.pitch=lerp(drv.pitch,tp,1-Math.exp(-dt*6));drv.roll=lerp(drv.roll,tr,1-Math.exp(-dt*6));
-  const bob=Math.abs(drv.spd)>.5?Math.sin(now()*13)*.012*Math.min(1,Math.abs(drv.spd)/6):0;
+  // the ground under it. Going over a crest fast, it leaves the ground for a moment and lands again.
+  const gyT=Math.max((hF+hB+hL+hR)/4,groundAt(drv.x,drv.z));
+  if(drv.air){drv.vy-=g*dt;drv.y+=drv.vy*dt;if(drv.y<=gyT){if(drv.vy<-4){drv.shake=Math.max(drv.shake,clamp(-drv.vy/12,.2,.8));_a.set(drv.x,gyT+.2,drv.z);puff(_a,0xe8b48a,.6,2.6,1,.45,.4);}drv.y=gyT;drv.vy=0;drv.air=false;}}
+  else{const yb=drv.y+drv.vy*dt-.5*g*dt*dt;if(yb>gyT+.04&&drv.vy>.5){drv.air=true;drv.y=yb;drv.vy-=g*dt;}else{drv.vy=clamp((gyT-drv.y)/dt,-20,20);drv.y=gyT;}}
+  if(!drv.air){const tp=Math.atan2(hB-hF,hl*2)-a*.004,tr=Math.atan2(hL-hR,hw*2)+drv.yawRate*drv.spd*.006;
+    drv.pitch=lerp(drv.pitch,tp,1-Math.exp(-dt*6));drv.roll=lerp(drv.roll,tr,1-Math.exp(-dt*6));}
+  const bob=!drv.air&&Math.abs(drv.spd)>.5?Math.sin(now()*13)*.012*Math.min(1,Math.abs(drv.spd)/6):0;
   bay.position.set(drv.x,drv.y+bob,drv.z);bay.rotation.set(drv.pitch,drv.yaw,drv.roll);
-  if(hasFuel)drv.fuel=Math.max(0,drv.fuel-(A.power/1500*Math.abs(drv.thr)+.04)*dt);}
+  // fuel: an engine turns about 30% of its fuel into work, so 1 MW at full burns a litre every 9 s
+  if(hasFuel)drv.fuel=Math.max(0,drv.fuel-A.power/9000*Math.max(.1,Math.abs(drv.thr))*dt);}
   // rotors spin up with the engines; jet fans spin while they push
-  for(const p of I.rotors)if(p.r.rotor&&!p.torn)p.r.rotor.rotation.y+=(p.def.lift>100?9:14)*drv.spool*dt;
+  for(const p of I.rotors)if(p.r.rotor&&!p.torn)p.r.rotor.rotation.y+=14*drv.spool*dt;
   for(const p of I.boosters)if(p.r.spinZ&&!p.torn)p.r.spinZ.rotation.z+=(drv.boost?30:hasFuel?4:0)*dt;
   // running gear: road wheels spin, the inside track slows in a turn, front wheels steer
   for(const p of I.drives){const lin=drv.air?0:drv.spd-drv.yawRate*p.xo,r=p.r;for(const s of r.spins)s.rotation.x+=lin*dt/r.rad*p.side;if(r.wg)r.wg.rotation.y=p.zo>0?drv.steer*.42:0;}
@@ -3547,10 +3626,12 @@ function updateDrive(dt){const I=drv.info,A=I.A,k=drv.keys;
   if(drv.shake>0){drv.shake=Math.max(0,drv.shake-dt*2.5);camera.position.x+=rand(-1,1)*drv.shake*.15;camera.position.y+=rand(-1,1)*drv.shake*.15;}
   camera.lookAt(tgt.x+f.x*30,tgt.y+f.y*30,tgt.z+f.z*30);
   sunFollow(drv.x,drv.z);
-  $('#gSpd').textContent=Math.round(Math.abs(drv.spd)*3.6);$('#gFuel').style.width=`${drv.fuelMax?drv.fuel/drv.fuelMax*100:0}%`;
-  $('#gFuelT').textContent=hasFuel?`FUEL · ${Math.ceil(drv.fuel)} L`:'OUT OF FUEL';
+  // a jet-only craft shows what's left in its jets
+  const jf=drv.fuelMax?0:I.boosters.reduce((t,p)=>t+(p.def.fuel>0&&!p.torn?p.bfuel:0),0),jm=drv.fuelMax?0:A.jfuel;
+  $('#gSpd').textContent=Math.round(Math.hypot(drv.vx||0,drv.vz||0)>Math.abs(drv.spd)?Math.hypot(drv.vx,drv.vz)*3.6:Math.abs(drv.spd)*3.6);$('#gFuel').style.width=`${drv.fuelMax?drv.fuel/drv.fuelMax*100:jm?jf/jm*100:0}%`;
+  $('#gFuelT').textContent=hasFuel?`FUEL · ${Math.ceil(drv.fuel)} L`:jf>0?`JET FUEL · ${Math.ceil(jf)} KG`:'OUT OF FUEL';
   const gl=I.guns.filter(p=>!p.torn),gtxt=gl.length?gl.map(p=>{const sp=(p.racks||[]).reduce((s,q)=>s+(q.left||0),0);return p.ammo<=0&&!sp?'EMPTY':p.reload>0||p.ammo<=0?'RELOADING':`${p.ammo}${sp?` + ${sp}`:''} LEFT`;}).join(' · '):'',can=I.cannons.filter(p=>!p.torn),mgs=I.mgs.filter(p=>!p.torn),mag=I.mags.length?` · MAGNET ${I.mags.some(isElectro)&&!drv.magOn?'OFF':'ON'}${drv.held?` · ${drv.held} HELD`:''}`:'';
-  $('#gWep').textContent=gtxt?(gl.length===1?`${gl[0].def.name.toUpperCase()} · ${gtxt}`:`GUNS · ${gtxt}`):can.length?(drv.cool>0?'RELOADING':'CANNON READY'):mgs.length?'MG READY':'NO WEAPONS';const aux=((I.fly?` · ALT ${Math.max(0,Math.round(drv.y-groundAt(drv.x,drv.z)))} M${drv.air?'':' · LANDED'}`:'')+mag+(I.boosters.length&&!I.fly?(drv.boost?' · BOOSTING':' · BOOST READY'):'')).replace(/^ · /,'');$('#gAux').textContent=aux;$('#gAux').hidden=!aux;}
+  $('#gWep').textContent=gtxt?(gl.length===1?`${gl[0].def.name.toUpperCase()} · ${gtxt}`:`GUNS · ${gtxt}`):can.length?(drv.cool>0?'RELOADING':'CANNON READY'):mgs.length?'MG READY':'NO WEAPONS';const aux=((I.fly?` · ALT ${Math.max(0,Math.round(drv.y-groundAt(drv.x,drv.z)))} M${I.fly.Tj>0?` · THR ${Math.round(drv.thrJ*100)}%`:''}${drv.stall?' · STALL':drv.air?'':' · LANDED'}`:'')+mag+(I.boosters.length&&!I.fly?(drv.boost?' · BOOSTING':' · BOOST READY'):'')).replace(/^ · /,'');$('#gAux').textContent=aux;$('#gAux').hidden=!aux;}
 
 /* ---------- firing ---------- */
 const SHELLS=[],TRACER_M=new THREE.MeshBasicMaterial({color:0xffe27a}),SHELL_M=new THREE.MeshBasicMaterial({color:0xfff6d6});
