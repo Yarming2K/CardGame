@@ -1,0 +1,21 @@
+{
+  "name": "Kestrel Ridge Raceway",
+  "description": "A fast, flowing mountain circuit carved into a granite ridge. Blind crests, a plunging downhill esses and a long uphill back straight reward commitment.",
+  "tags": [
+    "circuit",
+    "original",
+    "mountain",
+    "elevation",
+    "anticlockwise"
+  ],
+  "geotags": [],
+  "country": "Fictional - Alpine",
+  "city": "Kestrel Pass",
+  "length": "4820",
+  "width": "12",
+  "pitboxes": "24",
+  "run": "anticlockwise",
+  "author": "Original design",
+  "version": "1.0",
+  "url": ""
+}

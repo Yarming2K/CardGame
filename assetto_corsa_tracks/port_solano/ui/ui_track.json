@@ -1,0 +1,21 @@
+{
+  "name": "Port Solano Street Circuit",
+  "description": "A night street race through a Mediterranean harbour town. Tight 90-degree corners, a waterfront promenade blast and unforgiving walls.",
+  "tags": [
+    "street",
+    "original",
+    "night",
+    "city",
+    "anticlockwise"
+  ],
+  "geotags": [],
+  "country": "Fictional - Mediterranean",
+  "city": "Port Solano",
+  "length": "3610",
+  "width": "10",
+  "pitboxes": "20",
+  "run": "anticlockwise",
+  "author": "Original design",
+  "version": "1.0",
+  "url": ""
+}

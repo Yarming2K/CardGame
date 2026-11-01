@@ -1,0 +1,21 @@
+{
+  "name": "Sable Flats Motorpark",
+  "description": "A technical desert club circuit on a dry lake bed. Wide run-offs, a tricky double-apex carousel and a tight infield that punishes poor traction.",
+  "tags": [
+    "circuit",
+    "original",
+    "desert",
+    "technical",
+    "anticlockwise"
+  ],
+  "geotags": [],
+  "country": "Fictional - Desert Southwest",
+  "city": "Sable Flats",
+  "length": "4210",
+  "width": "14",
+  "pitboxes": "28",
+  "run": "anticlockwise",
+  "author": "Original design",
+  "version": "1.0",
+  "url": ""
+}

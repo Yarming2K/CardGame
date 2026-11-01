@@ -1,0 +1,21 @@
+{
+  "name": "Valdren Ring",
+  "description": "A long, high-speed forest circuit with sweeping curves, a flat-out kink section and a heavy-braking hairpin at the end of the 1.4 km Mistral straight.",
+  "tags": [
+    "circuit",
+    "original",
+    "forest",
+    "high speed",
+    "clockwise"
+  ],
+  "geotags": [],
+  "country": "Fictional - Northern Europe",
+  "city": "Valdren",
+  "length": "6140",
+  "width": "13",
+  "pitboxes": "30",
+  "run": "clockwise",
+  "author": "Original design",
+  "version": "1.0",
+  "url": ""
+}
