@@ -1,6 +1,6 @@
 # Photoreal – Assetto Corsa PP filters
 
-- `Photoreal.ini` (v3.0, bold): muted broadcast-camera colours, stronger contrast, camera-like bloom,
+- `Photoreal.ini` (v3.1, bold): muted broadcast-camera colours, stronger contrast, camera-like bloom,
   vignette and lens distortion, slow exposure adaptation.
 - `Photoreal_Subtle.ini` (v2.0): close to stock with small realism tweaks.
 
