@@ -15,13 +15,19 @@ entirely on your own computer. Nothing gets uploaded.
 
 You need **Python 3.10 to 3.13** ([python.org](https://www.python.org/downloads/),
 and tick "Add Python to PATH" on Windows) and about 5 GB of free disk space.
+Python 3.14 and newer won't work yet: PyTorch 2.8 has no builds for them.
+
+**On Windows, put this folder somewhere with a short path**, like
+`C:\Users\<you>\voice-clone`. PyTorch has very long file names, and installing
+fails with "No such file or directory" / "Long Path support" if the folder's
+path is longer than about 115 characters (e.g. deep inside `Downloads`).
 
 Open a terminal in this `voice-clone` folder.
 
 On Windows:
 
 ```bat
-python -m venv .venv
+py -3.13 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
