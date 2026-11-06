@@ -1,0 +1,13 @@
+# Your friends' recordings and generated audio stay on your computer -
+# never commit them to GitHub.
+voices/
+output/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+
+__pycache__/
+.venv/
+.pytest_cache/

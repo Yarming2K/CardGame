@@ -1,0 +1,13 @@
+# Python 3.10 - 3.13.
+#
+# PyTorch is capped below 2.9: from 2.9 on, coqui-tts also needs `torchcodec`
+# (plus FFmpeg shared libraries), which is fiddly to install, especially on Windows.
+#
+# NVIDIA GPU (much faster)? Install torch from https://pytorch.org/get-started/locally/
+# *first* (pick a 2.8 build with CUDA), then run `pip install -r requirements.txt`.
+torch>=2.2,<2.9
+torchaudio>=2.2,<2.9
+coqui-tts>=0.27.5,<0.29
+soundfile>=0.12
+numpy>=1.26
+librosa>=0.11
