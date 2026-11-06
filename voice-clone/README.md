@@ -34,7 +34,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The first time you make a voice speak, the model (~1.8 GB) downloads
+The first time you make a voice speak, the model (~1.9 GB) downloads
 automatically. It asks you to accept Coqui's **non-commercial** licence; type
 `y`. The model is free for personal use, but you can't sell what you make with
 it.

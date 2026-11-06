@@ -292,7 +292,7 @@ class Engine(Protocol):
 
 
 class XTTSEngine:
-    """Wraps Coqui XTTS-v2. The model (~1.8 GB) downloads on first use."""
+    """Wraps Coqui XTTS-v2. The model (~1.9 GB) downloads on first use."""
 
     MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
 
@@ -307,7 +307,7 @@ class XTTSEngine:
             ) from e
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Loading voice model on {device.upper()} (first run downloads ~1.8 GB)...",
+        print(f"Loading voice model on {device.upper()} (first run downloads ~1.9 GB)...",
               file=sys.stderr)
         self.tts = TTS(self.MODEL, progress_bar=True).to(device)
         self.sample_rate = int(self.tts.synthesizer.output_sample_rate)
