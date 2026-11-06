@@ -1,0 +1,2 @@
+# Keep Windows line endings in batch files (cmd can misbehave without them).
+*.bat -text

@@ -11,3 +11,6 @@ output/
 __pycache__/
 .venv/
 .pytest_cache/
+
+# Set when the voice model licence is accepted in the app.
+.model_licence_agreed

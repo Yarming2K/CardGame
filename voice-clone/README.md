@@ -11,6 +11,34 @@ entirely on your own computer. Nothing gets uploaded.
 > confirm consent when you add a voice, and it tags every file it makes as
 > AI-generated in the WAV metadata.
 
+## The easy way: the app (Windows)
+
+1. Install **Python 3.13** from [python.org](https://www.python.org/downloads/):
+   the 3.13.x "Windows installer (64-bit)", **not** 3.14 or newer. Tick
+   "Add python.exe to PATH".
+2. Install **FFmpeg** (for videos and phone recordings): open PowerShell and run
+   `winget install Gyan.FFmpeg`.
+3. Put this `voice-clone` folder somewhere with a short path, like
+   `C:\Users\<you>\voice-clone` (not deep inside Downloads).
+4. Double-click **`Install.bat`**. It takes 5-10 minutes the first time.
+5. Double-click **`Start Voice Clone.bat`**. The app opens in your browser.
+   Keep the black window open while you use it; close it to quit.
+
+Tip: right-click `Start Voice Clone.bat` and choose **Send to > Desktop
+(create shortcut)** for a desktop icon.
+
+In the app:
+- **Speak:** pick a voice, type what they should say, press Speak.
+- **Add a voice:** upload recordings of a friend, or record them with your microphone.
+- **From a video:** upload a video and the app finds each person's voice; listen,
+  type their name and add them.
+- **My voices:** see and delete saved voices.
+
+The app only runs on your computer (`127.0.0.1`); nobody else can open it.
+On macOS/Linux, do the install below, then run `python app.py`.
+
+Everything below is for using it from the command line instead.
+
 ## 1. Install (one time)
 
 You need **Python 3.10 to 3.13** ([python.org](https://www.python.org/downloads/),
