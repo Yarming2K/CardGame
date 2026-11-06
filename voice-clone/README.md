@@ -84,6 +84,47 @@ Optional extras when adding a voice:
 - `--note "asked in the group chat"` saves a note with the consent record
 - `--consent` skips the yes/no prompt (useful for scripts)
 
+## 4. Get voices out of a video or group recording
+
+Got a video of everyone hanging out? `split` works out how many people are
+talking, then saves clean clips of each one (ready to clone) and skips the bits
+where people talk over each other.
+
+```bash
+python voiceclone.py split "Game Night.mp4"
+```
+
+```
+Found 3 voices in Game Night.mp4 (1:29 long, 1:02 of speech):
+  speaker_1     0:26 of speech   5 clips (26s)
+  speaker_2     0:23 of speech   4 clips (23s)
+  speaker_3     0:18 of speech   4 clips (16s)
+  (skipped 0:03 where voices overlapped or were unclear)
+```
+
+1. Listen to `output/split/game-night/speaker_1_preview.wav`, `speaker_2_preview.wav`
+   and so on to work out who is who.
+2. If that person agreed, add them straight from their folder:
+   ```bash
+   python voiceclone.py add "Maya" output/split/game-night/speaker_1
+   ```
+   You can add clips from several videos to the same person to improve their voice.
+
+`report.txt` in the same folder lists exactly when each person talks.
+
+- **Videos** (`.mp4`, `.mov`, `.mkv`, ...) need [FFmpeg](https://ffmpeg.org/download.html) installed.
+- **Wrong number of people?** If one person shows up twice, or two people got
+  merged into one, run it again with the right count: `--speakers 3`.
+- Speakers with only a few seconds of clips are often someone who barely spoke,
+  or a mix of people talking at once. Listen before adding them.
+- It works best with people taking turns: lots of crosstalk, loud music or
+  a noisy room leave fewer clean clips.
+- Clones made from video clips sound a little less like the person than ones made
+  from a clean voice memo, because video audio is noisier and compressed. If you can,
+  add a voice memo to the same person too: `add "Maya" memo.m4a`.
+- The first run takes about a minute per 5 minutes of video on a typical CPU
+  (it uses the same voice model as cloning, so nothing extra downloads).
+
 ## Tips
 
 - **Doesn't sound like them?** Add more (and cleaner) clips. Background noise

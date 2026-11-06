@@ -11,6 +11,9 @@ coqui-tts>=0.27.5,<0.29
 soundfile>=0.12
 numpy>=1.26
 librosa>=0.11
+# For `split` (finding each voice in a video/group recording):
+silero-vad>=6.0,<7
+scikit-learn>=1.2
 # coqui-tts imports `six` without declaring it; it used to come in via
 # python-dateutil, which dropped it in 4.0 (Nov 2026).
 six>=1.16

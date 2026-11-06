@@ -9,6 +9,7 @@ Quick start:
     python voiceclone.py add "Sam" sam_clip1.m4a sam_clip2.wav
     python voiceclone.py say "Sam" "Hello! This is my cloned voice."
     python voiceclone.py say "Sam"            # interactive: type lines, get audio
+    python voiceclone.py split party.mp4      # find each voice in a video/recording
     python voiceclone.py list
     python voiceclone.py remove "Sam"
 
@@ -78,22 +79,60 @@ def _read_audio_any(path: Path) -> tuple[np.ndarray, int]:
             raise VoiceCloneError(
                 f"Couldn't read '{path.name}' ({sf_error}).\n"
                 "  WAV, FLAC, OGG and MP3 work out of the box. For phone recordings "
-                "(.m4a/.aac/.mp4) install ffmpeg (https://ffmpeg.org/download.html) "
-                "or convert the file to WAV first."
+                "(.m4a/.aac) and videos (.mp4/.mov/.mkv/...) install FFmpeg "
+                "(https://ffmpeg.org/download.html) or convert the file to WAV first."
             ) from sf_error
         with tempfile.TemporaryDirectory() as tmp:
             wav_path = Path(tmp) / "converted.wav"
             result = subprocess.run(
                 [ffmpeg, "-nostdin", "-loglevel", "error", "-y", "-i", str(path),
-                 "-ac", "1", "-ar", str(SAMPLE_RATE), str(wav_path)],
+                 "-vn", "-ac", "1", "-ar", str(SAMPLE_RATE), str(wav_path)],
                 capture_output=True, text=True,
             )
             if result.returncode != 0:
                 raise VoiceCloneError(
-                    f"ffmpeg couldn't convert '{path.name}': {result.stderr.strip()}"
+                    f"FFmpeg couldn't get audio out of '{path.name}': {result.stderr.strip()}"
                 ) from sf_error
             data, sr = sf.read(str(wav_path), dtype="float32", always_2d=True)
             return data, sr
+
+
+def load_audio(path: Path, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
+    """Load any audio or video file as mono float32 at `sample_rate` (untrimmed)."""
+    import librosa  # imported lazily: it is slow to import
+
+    data, sr = _read_audio_any(path)
+    audio = data.mean(axis=1)
+    if sr != sample_rate:
+        audio = librosa.resample(audio, orig_sr=sr, target_sr=sample_rate)
+    return np.ascontiguousarray(audio, dtype=np.float32)
+
+
+AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".aac", ".flac", ".ogg", ".opus", ".wma",
+                    ".mp4", ".mov", ".mkv", ".webm", ".avi"}
+
+
+def expand_clip_args(args: Sequence[str]) -> list[Path]:
+    """Turn command-line clip arguments into files: folders and *.wav patterns
+    are expanded here, because Windows' terminals don't do it for us."""
+    import glob
+
+    paths: list[Path] = []
+    for arg in args:
+        p = Path(arg)
+        if p.is_dir():
+            found = sorted(f for f in p.iterdir() if f.is_file() and f.suffix.lower() in AUDIO_EXTENSIONS)
+            if not found:
+                raise VoiceCloneError(f"No audio files in folder '{arg}'.")
+            paths.extend(found)
+        elif not p.exists() and any(c in arg for c in "*?["):
+            found = sorted(Path(m) for m in glob.glob(arg))
+            if not found:
+                raise VoiceCloneError(f"No files match '{arg}'.")
+            paths.extend(found)
+        else:
+            paths.append(p)
+    return paths
 
 
 def clean_clip(path: Path) -> np.ndarray:
@@ -104,10 +143,7 @@ def clean_clip(path: Path) -> np.ndarray:
     """
     import librosa  # imported lazily: it is slow to import
 
-    data, sr = _read_audio_any(path)
-    audio = data.mean(axis=1)
-    if sr != SAMPLE_RATE:
-        audio = librosa.resample(audio, orig_sr=sr, target_sr=SAMPLE_RATE)
+    audio = load_audio(path)
     if audio.size == 0 or not np.any(audio):
         raise VoiceCloneError(f"'{path.name}' is empty or completely silent.")
     audio, _ = librosa.effects.trim(audio, top_db=35)
@@ -326,6 +362,20 @@ class XTTSEngine:
         )
         return np.asarray(wav, dtype=np.float32)
 
+    def embed(self, windows: np.ndarray) -> np.ndarray:
+        """Voiceprints for a batch of equal-length 16 kHz clips: [B, T] -> [B, 512].
+
+        Uses XTTS's own speaker encoder, i.e. the same notion of "voice" that the
+        cloning itself relies on.
+        """
+        import torch
+
+        model = self.tts.synthesizer.tts_model
+        x = torch.from_numpy(np.ascontiguousarray(windows, dtype=np.float32)).to(model.device)
+        with torch.inference_mode():
+            emb = model.hifigan_decoder.speaker_encoder.forward(x, l2_norm=True)
+        return emb.detach().cpu().numpy().reshape(len(windows), -1)
+
 
 def speak(engine: Engine, profile: Profile, text: str, out_path: Path,
           language: str | None = None) -> Path:
@@ -403,9 +453,10 @@ def cmd_add(args: argparse.Namespace, library: VoiceLibrary) -> int:
         consent["note"] = args.note
 
     adding_more = library.exists(args.name)
-    print(f"Processing {len(args.clips)} recording(s)...")
+    clips = expand_clip_args(args.clips)
+    print(f"Processing {len(clips)} recording(s)...")
     profile, warnings = library.add(
-        args.name, [Path(c) for c in args.clips], consent,
+        args.name, clips, consent,
         language=args.language, consent_recording=Path(args.consent_recording) if args.consent_recording else None,
     )
     for w in warnings:
@@ -447,6 +498,46 @@ def cmd_say(args: argparse.Namespace, library: VoiceLibrary,
             one(line, None)
         except VoiceCloneError as e:
             print(f"Error: {e}", file=sys.stderr)
+    return 0
+
+
+def cmd_split(args: argparse.Namespace, library: VoiceLibrary,
+              printer_factory: Callable[[], object] | None = None) -> int:
+    import voice_split
+
+    src = Path(args.input)
+    if not src.is_file():
+        raise VoiceCloneError(f"File not found: {src}")
+    if args.speakers is not None and args.speakers < 1:
+        raise VoiceCloneError("--speakers must be at least 1.")
+    out_dir = Path(args.out) if args.out else Path(args.output_dir) / "split" / slugify(src.stem)
+
+    print(f"Listening to {src.name}...")
+    result = voice_split.split_file(
+        src, out_dir, printer_factory or (lambda: XTTSEngine(args.device)), n_speakers=args.speakers)
+
+    ft = voice_split.fmt_time
+    if not result.speakers:
+        print("Couldn't find any clear voices (too little speech, or people talking over each other).")
+        return 1
+    count = len(result.speakers)
+    print(f"\nFound {count} voice{'s' if count != 1 else ''} in {src.name} "
+          f"({ft(result.duration)} long, {ft(result.speech_seconds)} of speech):")
+    for spk in result.speakers:
+        line = f"  {spk.name:<11} {ft(spk.speech_seconds):>6} of speech  {len(spk.clips):>2} clips ({spk.clip_seconds:.0f}s)"
+        if spk.clip_seconds < MIN_TOTAL_SECONDS:
+            line += "  - too little to clone well"
+        elif spk.clip_seconds < RECOMMENDED_TOTAL_SECONDS:
+            line += "  - not much: may be a brief speaker or overlapping voices, listen first"
+        print(line)
+    if result.unclear_seconds >= 1:
+        print(f"  (skipped {ft(result.unclear_seconds)} where voices overlapped or were unclear)")
+    print(f"\nSaved to: {out_dir}")
+    print("Listen to the speaker_N_preview.wav files to work out who is who. Then, if that")
+    print("person has agreed to have their voice cloned, add them, e.g.:")
+    print(f'  python voiceclone.py add "Sam" "{out_dir / result.speakers[0].name}"')
+    if args.speakers is None and count > 1:
+        print("(If two speakers are really the same person, or people got merged, re-run with --speakers N.)")
     return 0
 
 
@@ -502,6 +593,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--play", action="store_true", help="open the result in your audio player")
     p.add_argument("--device", choices=["cpu", "cuda"], help="force CPU or NVIDIA GPU (default: auto)")
 
+    p = sub.add_parser("split", help="find the different voices in a video/recording and save clips of each")
+    p.add_argument("input", help="video or audio file (mp4, mov, m4a, wav, ...)")
+    p.add_argument("--speakers", type=int, metavar="N",
+                   help="how many people talk in it (default: work it out automatically)")
+    p.add_argument("--out", metavar="FOLDER", help="where to save the clips (default: output/split/<file name>)")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help=argparse.SUPPRESS)
+    p.add_argument("--device", choices=["cpu", "cuda"], help="force CPU or NVIDIA GPU (default: auto)")
+
     sub.add_parser("list", help="list saved voices")
 
     p = sub.add_parser("remove", help="delete a saved voice and its recordings")
@@ -513,7 +612,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     library = VoiceLibrary(Path(args.voices_dir))
-    commands = {"add": cmd_add, "say": cmd_say, "list": cmd_list, "remove": cmd_remove}
+    commands = {"add": cmd_add, "say": cmd_say, "split": cmd_split, "list": cmd_list, "remove": cmd_remove}
     try:
         return commands[args.command](args, library)
     except VoiceCloneError as e:
@@ -522,4 +621,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    # voice_split does `from voiceclone import ...`: make that reuse this module
+    # instead of loading a second copy (whose VoiceCloneError main() wouldn't catch).
+    sys.modules.setdefault("voiceclone", sys.modules[__name__])
     sys.exit(main())
