@@ -297,6 +297,11 @@ class XTTSEngine:
     MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
 
     def __init__(self, device: str | None = None):
+        # Hide harmless library warnings (torchaudio deprecations, XTTS's GPT
+        # config tripping newer transformers' checks) that look like errors.
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning, module=r"torchaudio")
+        os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
         try:
             import torch
             from TTS.api import TTS
