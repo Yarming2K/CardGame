@@ -4,7 +4,11 @@ A night-market potion strategy game with a light RTS layer. Run a potion shop, s
 
 See [DESIGN.md](DESIGN.md) for the full design and roadmap.
 
-## Running it
+## Play in the browser
+
+Open `web/index.html` in any modern browser. It's a single self-contained file (an HTML5 canvas port of this prototype) with mouse, keyboard, and touch controls. Your character is saved in that browser.
+
+## Running the Godot version
 
 1. Install **Godot 4.4 or newer** (standard version, not .NET) from godotengine.org.
 2. In the Godot Project Manager, click **Import** and select `cauldron-row/project.godot`.

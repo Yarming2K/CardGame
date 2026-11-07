@@ -81,7 +81,7 @@ func _class_card(cid: String) -> Control:
 	_wrapped(v, "Paths at level %d: %s or %s" % [GameData.PATH_LEVEL, paths[0], paths[1]], 12, MUTED)
 
 	var pick := Button.new()
-	pick.text = "Become a %s" % d["name"]
+	pick.text = "Become %s" % _with_article(d["name"])
 	pick.custom_minimum_size = Vector2(0, 34)
 	pick.pressed.connect(_confirm_class.bind(cid))
 	v.add_child(pick)
@@ -92,10 +92,10 @@ func _confirm_class(cid: String) -> void:
 	var cname: String = GameData.CLASSES[cid]["name"]
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "This choice is permanent"
-	dialog.dialog_text = ("Become a %s for good?\n\nYour class is locked for the life of this character. " +
-			"You'll grow stronger and choose a path later, but you can't switch.") % cname
+	dialog.dialog_text = ("Become %s for good?\n\nYour class is locked for the life of this character. " +
+			"You'll grow stronger and choose a path later, but you can't switch.") % _with_article(cname)
 	dialog.dialog_autowrap = true
-	dialog.ok_button_text = "Become a %s" % cname
+	dialog.ok_button_text = "Become %s" % _with_article(cname)
 	dialog.cancel_button_text = "Let me think"
 	add_child(dialog)
 	dialog.confirmed.connect(func() -> void:
@@ -182,6 +182,10 @@ func _confirm_abandon() -> void:
 
 
 # --- Helpers -------------------------------------------------------------------------
+
+func _with_article(n: String) -> String:
+	return ("an " if n.left(1) in "AEIOU" else "a ") + n
+
 
 func _card_style(color: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

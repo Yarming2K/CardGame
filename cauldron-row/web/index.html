@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- ARTIFACT-START -->
+<title>Cauldron Row</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almendra+SC&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: the market playfield on the left, a shopkeeper's ledger on the right; stacks below 880px.
+   Deliberately single-theme: the game is set at night. */
+:root {
+  --night: #110c1b;
+  --panel: #1a1428;
+  --raised: #251c38;
+  --line: #3b2e58;
+  --text: #f1eaff;
+  --muted: #a99ccc;
+  --gold: #ffcf5c;
+  --danger: #ff7084;
+  --good: #86e39a;
+  --display: "Almendra SC", "Palatino Linotype", Palatino, Georgia, serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--text);
+  font: 15px/1.45 var(--body);
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--gold); }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button:disabled { opacity: 0.4; cursor: default; }
+button.primary { background: var(--gold); color: #24180a; border-color: var(--gold); font-weight: 700; }
+button.ghost { background: none; border-color: transparent; color: var(--danger); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Title ---------- */
+#title { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+.masthead { display: grid; gap: 4px; justify-items: center; text-align: center; padding-block: 12px 4px; }
+.masthead h1 { font-size: clamp(44px, 9vw, 84px); color: var(--gold); line-height: 1; letter-spacing: 0.02em; }
+.masthead p { margin: 0; color: var(--muted); }
+.lock-note { text-align: center; display: grid; gap: 4px; }
+.lock-note h2 { font-size: 26px; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px; }
+.class-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 8px;
+  min-width: 0;
+}
+.class-card header { display: flex; gap: 12px; align-items: center; }
+.class-card canvas { width: 48px; height: 48px; flex: none; background: var(--raised); border-radius: 10px; }
+.class-card h3 { font-size: 26px; line-height: 1.1; }
+.class-card .role { color: var(--gold); font-size: 13px; }
+.class-card dl { margin: 0; display: grid; gap: 6px; font-size: 13px; }
+.class-card dt { font-weight: 700; display: inline; }
+.class-card dd { margin: 0; color: var(--muted); }
+.returning { max-width: 620px; width: 100%; margin: 0 auto; display: grid; gap: 14px; }
+.char-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 10px; }
+.char-card h2 { font-size: 34px; }
+.char-card canvas { width: 56px; height: 56px; flex: none; background: var(--raised); border-radius: 10px; }
+.bar { height: 8px; background: var(--raised); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--gold); width: 0; }
+.save-note { font-size: 12px; color: var(--muted); text-align: center; }
+.modal-back {
+  position: fixed; inset: 0; background: rgba(8, 5, 14, 0.72);
+  display: grid; place-items: center; z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px; max-width: 460px; display: grid; gap: 12px; }
+.modal h2 { font-size: 28px; color: var(--gold); }
+.modal .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---------- Game ---------- */
+#game {
+  display: grid;
+  grid-template-columns: minmax(0, calc((100vh - 32px) * 4 / 3)) 340px;
+  grid-template-columns: minmax(0, calc((100dvh - 32px) * 4 / 3)) 340px;
+  justify-content: center;
+  gap: 12px;
+}
+.stage { position: relative; min-width: 0; }
+.stage canvas {
+  display: block; width: 100%; aspect-ratio: 4 / 3; max-width: 100%;
+  border-radius: 10px; touch-action: none; background: #1f3a26;
+}
+.hud-wrap { position: relative; min-height: 0; }
+.hud {
+  position: absolute; inset: 0; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; display: grid; gap: 10px; align-content: start; font-size: 13px;
+}
+.hud section { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 9px; }
+.hud h3 { font-size: 17px; color: var(--gold); }
+.phase { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.phase strong { font-family: var(--display); font-size: 26px; font-weight: 400; color: var(--gold); }
+.scores { display: flex; gap: 14px; font-size: 15px; flex-wrap: wrap; }
+.ing-grid { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 4px 8px; align-items: center; }
+.sw { width: 12px; height: 12px; border-radius: 3px; }
+.recipes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.recipes button { text-align: left; font-size: 12px; line-height: 1.25; padding: 6px 8px; }
+.recipes button small { display: block; color: var(--muted); }
+.recipes button.sig { border-color: #6a5420; }
+.prices { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto auto; gap: 4px 6px; align-items: center; }
+.prices .h { color: var(--muted); font-size: 11px; }
+.prices button { padding: 1px 8px; font-size: 13px; }
+.price { color: var(--gold); min-width: 2.6em; text-align: center; }
+.log { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+details summary { cursor: pointer; color: var(--gold); font-family: var(--display); font-size: 17px; }
+details ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: rgba(8, 5, 14, 0.6); border-radius: 10px; z-index: 5;
+}
+.banner { position: absolute; left: 0; right: 0; top: 36%; text-align: center; pointer-events: none; z-index: 4; }
+.banner h2 { font-size: clamp(36px, 7vw, 64px); color: var(--gold); text-shadow: 0 3px 12px #000; }
+.banner p { margin: 0; font-size: 18px; text-shadow: 0 2px 8px #000; }
+.banner.show { animation: banner 2.8s ease forwards; }
+@keyframes banner { 0%, 65% { opacity: 1; } 100% { opacity: 0; } }
+.hint {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 4;
+  background: rgba(30, 14, 44, 0.9); color: #e2a8ff; border: 1px solid #7a3fa8;
+  border-radius: 99px; padding: 6px 14px; font-size: 14px; pointer-events: none; white-space: nowrap;
+}
+.picker { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 8px; width: min(340px, 90%); }
+.picker h2 { font-size: 22px; color: var(--gold); }
+.top-actions { position: absolute; top: 8px; right: 8px; z-index: 3; }
+
+/* ---------- Results ---------- */
+#results { max-width: 560px; margin: 0 auto; display: grid; gap: 12px; text-align: center; padding-block: 24px; }
+#results h1 { font-size: clamp(38px, 8vw, 58px); color: var(--gold); }
+
+@media (max-width: 880px) {
+  #game { grid-template-columns: minmax(0, 1fr); }
+  .hud-wrap { position: static; }
+  .hud { position: static; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .banner.show { animation-duration: 0.01s; animation-delay: 2.5s; }
+}
+</style>
+</head>
+<body>
+
+<main id="title"></main>
+
+<main id="game" hidden>
+  <div class="stage" id="stage">
+    <canvas id="field" width="1200" height="900" aria-label="Market Row and the Wildwood"></canvas>
+    <div class="top-actions"><button id="pauseBtn" type="button">Pause</button></div>
+    <div class="hint" id="hint" hidden>Tap a grove to Blight it. Right-click or Esc cancels.</div>
+    <div class="banner" id="banner"><h2 id="bannerTitle"></h2><p id="bannerSub"></p></div>
+    <div class="overlay" id="pauseLayer" hidden>
+      <div class="picker">
+        <h2>Paused</h2>
+        <button type="button" class="primary" data-action="resume">Resume</button>
+        <button type="button" data-action="abandon">Abandon match (no XP)</button>
+      </div>
+    </div>
+    <div class="overlay" id="prophecyLayer" hidden>
+      <div class="picker" id="prophecyPicker"></div>
+    </div>
+  </div>
+  <div class="hud-wrap"><aside class="hud" id="hud"></aside></div>
+</main>
+
+<main id="results" hidden></main>
+
+<script>
+"use strict";
+
+// =====================================================================
+// Data and tuning. Mirrors scripts/game_data.gd in the Godot project.
+// =====================================================================
+const ING = ["Moonpetal", "Emberroot", "Mistwater", "Goldcomb", "Nightshade"];
+const ING_COLOR = ["#dbe6ff", "#f2613a", "#5ca8ff", "#ffcc42", "#9e57e0"];
+const MOON = 0, EMBER = 1, MIST = 2, GOLD = 3, SHADE = 4;
+
+const T = {
+  DAYS: 3, DAY: 100, NIGHT: 80,
+  CUST_DAY: 6, CUST_NIGHT: 1.6, CONN: 0.12,
+  GATHER: 1.0, SMALL_MAX: 8, SMALL_REGROW: 5, RICH_MAX: 18, RICH_REGROW: 2.5,
+  MAX_QUEUE: 5, GREENHOUSE: 8,
+  KO: 12, CHASE_R: 130, GLOOM_SPEED: 50, GLOOM_CHASE: 82, HEX_BANISH: 0.6,
+  START_REP: 10, START_ING: 2, SPOIL: 0.5, MIN_PRICE: 1, MAX_PRICE: 30,
+  PATH_LEVEL: 5, WIN_XP: 40, LOSS_XP: 10,
+};
+
+const POTIONS = {
+  healing_tonic:      { name: "Healing Tonic",      cost: [[MOON, 1], [MIST, 1]],  value: 4,  time: 3.5, color: "#8cf2a6" },
+  love_draught:       { name: "Love Draught",       cost: [[GOLD, 1], [MOON, 1]],  value: 5,  time: 3.5, color: "#ff8cbf" },
+  ember_elixir:       { name: "Ember Elixir",       cost: [[EMBER, 1], [GOLD, 1]], value: 5,  time: 3.5, color: "#ff8033" },
+  sleep_draught:      { name: "Sleep Draught",      cost: [[MIST, 1], [SHADE, 1]], value: 6,  time: 3.5, color: "#738cff" },
+  shadow_tincture:    { name: "Shadow Tincture",    cost: [[SHADE, 1], [EMBER, 1]], value: 6, time: 3.5, color: "#b359d9" },
+  verdant_balm:       { name: "Verdant Balm",       cost: [[MOON, 2], [MIST, 1]],  value: 12, time: 6, color: "#4de659" },
+  liquid_gold:        { name: "Liquid Gold",        cost: [[GOLD, 2], [EMBER, 1]], value: 12, time: 6, color: "#ffd94d" },
+  panacea_phial:      { name: "Panacea Phial",      cost: [[MOON, 1], [MIST, 1], [GOLD, 1]], value: 12, time: 6, color: "#e6e6ff" },
+  starlight_philter:  { name: "Starlight Philter",  cost: [[MOON, 1], [GOLD, 1], [SHADE, 1]], value: 12, time: 6, color: "#80f2ff" },
+  hexfire_brew:       { name: "Hexfire Brew",       cost: [[SHADE, 2], [EMBER, 1]], value: 12, time: 6, color: "#f24066" },
+  dreamsight_draught: { name: "Dreamsight Draught", cost: [[MIST, 2], [SHADE, 1]], value: 12, time: 6, color: "#a68cff" },
+};
+const BASIC = ["healing_tonic", "love_draught", "ember_elixir", "sleep_draught", "shadow_tincture"];
+
+const CLASSES = {
+  herbalist: {
+    name: "Herbalist", color: "#61c76b", familiar: "Sproutlings", familiarDesc: "fast, fragile gatherers",
+    count: 4, speed: 125, carry: 2,
+    passive: "Greenhouse", passiveDesc: "Your shop grows a free random ingredient every 8 seconds.",
+    ult: "Overgrowth", ultDesc: "Every grove on the map refills, and your familiars gather twice as fast for 20s.",
+    signature: "verdant_balm", role: "Economy: out-gather everyone.",
+    shop: "Marigold's Greenhouse", paths: ["Gardener", "Forager"],
+  },
+  alchemist: {
+    name: "Alchemist", color: "#e0a342", familiar: "Brass Golems", familiarDesc: "slow, sturdy, carry a lot",
+    count: 3, speed: 70, carry: 5,
+    passive: "Transmutation Circle", passiveDesc: "Brew 25% faster, and turn 2 of your most-stocked ingredient into 1 of any other.",
+    ult: "Philosopher's Hour", ultDesc: "For 30s, any ingredient can stand in for any other when you brew.",
+    signature: "liquid_gold", role: "Production: the fastest brewer.",
+    shop: "Brass & Bubbles", paths: ["Transmuter", "Golemancer"],
+  },
+  apothecary: {
+    name: "Apothecary", color: "#c2a8f5", familiar: "Mender Moths", familiarDesc: "quick to recover",
+    count: 3, speed: 105, carry: 3,
+    passive: "Bedside Manner", passiveDesc: "Each sale earns +2 reputation instead of +1, and knocked-out familiars recover 3x faster.",
+    ult: "Panacea", ultDesc: "Revive every knocked-out familiar; for 25s they ignore Gloomlings.",
+    signature: "panacea_phial", role: "Support: steady reputation, safe night work.",
+    shop: "Wren's Remedies", paths: ["Healer", "Masterworker"],
+  },
+  enchanter: {
+    name: "Enchanter", color: "#6bdbeb", familiar: "Wisps", familiarDesc: "drifting glow-lights",
+    count: 3, speed: 95, carry: 3,
+    passive: "Vault", passiveDesc: "Your potions never spoil at dawn.",
+    ult: "Enthrall", ultDesc: "For 20s, every shopper who wants something you stock comes to you, whatever the competition charges.",
+    signature: "starlight_philter", role: "Market control: win the night rush.",
+    shop: "Vesper's Enchantments", paths: ["Charmer", "Beastcaller"],
+  },
+  hexer: {
+    name: "Hexer", color: "#e0525c", familiar: "Imps", familiarDesc: "fast, scrappy raiders",
+    count: 4, speed: 120, carry: 2,
+    passive: "Imps Fight Back", passiveDesc: "60% chance to banish a Gloomling that touches one of your imps.",
+    ult: "Blight", ultDesc: "Curse a grove: only you can harvest it until dawn.",
+    signature: "hexfire_brew", role: "Aggression: work the woods at night and deny groves.",
+    shop: "Thorn's Hexes", paths: ["Curse-weaver", "Imp Lord"],
+  },
+  seer: {
+    name: "Seer", color: "#9e85eb", familiar: "Crows", familiarDesc: "swift fliers",
+    count: 3, speed: 135, carry: 2,
+    passive: "Observatory", passiveDesc: "See the full demand forecast for every night.",
+    ult: "Prophecy", ultDesc: "Choose tonight's favored potion: 3x as many shoppers want it, and they'll pay up to 50% more.",
+    signature: "dreamsight_draught", role: "Information: know what sells before anyone else.",
+    shop: "Oriel's Visions", paths: ["Oracle", "Spymaster"],
+  },
+};
+const CLASS_IDS = Object.keys(CLASSES);
+const CUSTOMER_KINDS = [
+  ["A Moth Spirit", "#ebdb9e"], ["A Lost Child", "#f2b89e"], ["A Frost Hag", "#b8dbf5"],
+  ["A Grumbling Ghost", "#dbdbf5"], ["A Swamp Toad", "#75b85c"], ["A Lantern Fox", "#f58f42"],
+  ["A Clockwork Owl", "#b89e6b"],
+];
+
+const W = 1200, H = 900, ROW_TOP = 380, ROW_BOTTOM = 530, LANE_Y = 505;
+const PLAYER_POS = { x: 380, y: 470 }, RIVAL_POS = { x: 820, y: 470 };
+
+const recipesFor = (cid) => [...BASIC, CLASSES[cid].signature];
+const isSignature = (pid) => !BASIC.includes(pid);
+const costText = (pid) => POTIONS[pid].cost.map(([i, n]) => (n > 1 ? `${n} ${ING[i]}` : ING[i])).join(" + ");
+const xpFor = (lvl) => 100 + (lvl - 1) * 50;
+const withArticle = (n) => (/^[AEIOU]/.test(n) ? "an " : "a ") + n;
+
+// ---------- small helpers ----------
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const $ = (id) => document.getElementById(id);
+function rgb(hex) {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function rgba(hex, a) { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; }
+function mix(h1, h2, t) {
+  const a = rgb(h1), b = rgb(h2);
+  return "#" + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+const lighten = (h, t) => mix(h, "#ffffff", t);
+const darken = (h, t) => mix(h, "#000000", t);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// =====================================================================
+// Save: a permanent character. Private per-viewer document when the
+// page runs inside claude.ai; browser storage everywhere else.
+// =====================================================================
+const SAVE_KEY = "cauldron-row-profile-v1";
+function blankProfile() {
+  return { classId: "", level: 1, xp: 0, matches: 0, wins: 0, best: 0, lifetime: 0 };
+}
+function cleanProfile(d) {
+  const p = blankProfile();
+  if (!d || typeof d !== "object") return p;
+  p.classId = CLASSES[d.classId] ? d.classId : "";
+  for (const k of ["level", "xp", "matches", "wins", "best", "lifetime"]) {
+    const v = Number(d[k]);
+    if (Number.isFinite(v)) p[k] = Math.max(k === "level" ? 1 : 0, Math.floor(v));
+  }
+  return p;
+}
+const Save = {
+  data: blankProfile(),
+  ref: null,
+  where: "this browser",
+  loadLocal() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) this.data = cleanProfile(JSON.parse(raw));
+    } catch (e) { /* storage unavailable: play without a saved character */ }
+  },
+  write() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.data)); } catch (e) { /* ignore */ }
+    if (this.ref) this.ref.set({ ...this.data }).catch(() => {});
+  },
+  async connect() {
+    try {
+      if (!window.claude || typeof window.claude.use !== "function") return;
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      if (!db || !user) return;
+      const id = await user.id();
+      if (!id) return;
+      const ref = db.doc("data/users/" + id + "/profile");
+      const snap = await Promise.race([
+        ref.get(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000)),
+      ]);
+      this.ref = ref;
+      this.where = "your Claude account";
+      if (snap.exists) {
+        const cloud = cleanProfile(snap.data());
+        if (cloud.classId || !this.data.classId) this.data = cloud;
+        else this.write();
+      } else if (this.data.classId) {
+        this.write();
+      }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.data)); } catch (e) { /* ignore */ }
+      if (screen === "title") renderTitle();
+    } catch (e) {
+      this.ref = null;
+    }
+  },
+  chooseClass(cid) {
+    if (this.data.classId || !CLASSES[cid]) return;
+    this.data.classId = cid;
+    this.write();
+  },
+  abandon() {
+    this.data = blankProfile();
+    this.write();
+  },
+  recordMatch(coins, won) {
+    const p = this.data;
+    p.matches += 1;
+    if (won) p.wins += 1;
+    p.best = Math.max(p.best, coins);
+    p.lifetime += coins;
+    const gained = coins + (won ? T.WIN_XP : T.LOSS_XP);
+    p.xp += gained;
+    let levels = 0;
+    while (p.xp >= xpFor(p.level)) { p.xp -= xpFor(p.level); p.level += 1; levels += 1; }
+    this.write();
+    return { xp: gained, levels };
+  },
+};
+
+// =====================================================================
+// Match construction
+// =====================================================================
+let screen = "title";
+let M = null;
+let paused = false;
+let SPEED = 1;
+
+function newMatch(playerClass, rivalClass) {
+  const m = {
+    day: 1, night: false, phaseLeft: T.DAY, demand: {}, favored: "", finished: false,
+    missed: 0, log: [], targeting: false, custAcc: 0,
+    groves: [], shops: [], familiars: [], customers: [], glooms: [], floats: [],
+  };
+  const layout = [
+    [MOON, false, 270, 290], [EMBER, false, 490, 290], [MIST, false, 270, 625], [GOLD, false, 490, 625],
+    [MOON, false, 930, 290], [EMBER, false, 710, 290], [MIST, false, 930, 625], [GOLD, false, 710, 625],
+    [SHADE, true, 600, 115], [SHADE, true, 600, 795],
+    [EMBER, true, 90, 95], [EMBER, true, 1110, 95], [GOLD, true, 90, 815], [GOLD, true, 1110, 815],
+  ];
+  for (const [ing, rich, x, y] of layout) {
+    const max = rich ? T.RICH_MAX : T.SMALL_MAX;
+    m.groves.push({ ing, rich, x, y, max, amount: max, regrow: rich ? T.RICH_REGROW : T.SMALL_REGROW,
+      blightedBy: null, t: Math.random() * 5 });
+  }
+  m.player = makeShop(m, playerClass, true, PLAYER_POS);
+  m.rival = makeShop(m, rivalClass, false, RIVAL_POS);
+  m.ai = makeAI(m, m.rival);
+  startDay(m, true);
+  return m;
+}
+
+function makeShop(m, cid, isPlayer, pos) {
+  const d = CLASSES[cid];
+  const s = {
+    cid, d, isPlayer, x: pos.x, y: pos.y, color: d.color,
+    name: isPlayer ? `Your ${d.name} shop` : d.shop,
+    ing: Array(5).fill(T.START_ING), potions: {}, prices: {}, coins: 0, rep: T.START_REP, sold: 0,
+    queue: [], prog: 0, fams: [], ultReady: true, ultTime: 0, gh: 0, t: 0,
+  };
+  for (const pid of recipesFor(cid)) { s.potions[pid] = 0; s.prices[pid] = POTIONS[pid].value; }
+  m.shops.push(s);
+  for (let i = 0; i < d.count; i++) {
+    const hx = s.x - 45 + i * 24, hy = s.y + 34 + (i % 2) * 10;
+    const f = {
+      shop: s, state: "idle", grove: null, tx: hx, ty: hy, hx, hy, x: hx, y: hy,
+      cargoIng: -1, cargo: 0, speed: d.speed, carry: d.carry, sel: false,
+      koLeft: 0, koTotal: 1, acc: 0, bob: Math.random() * 6.28,
+    };
+    s.fams.push(f);
+    m.familiars.push(f);
+  }
+  return s;
+}
+
+// =====================================================================
+// Shops
+// =====================================================================
+const knows = (s, pid) => pid in s.potions;
+const stock = (s, pid) => s.potions[pid] || 0;
+const priceOf = (s, pid) => (pid in s.prices ? s.prices[pid] : 999);
+const totalIng = (s) => s.ing.reduce((a, b) => a + b, 0);
+const totalPotions = (s) => Object.values(s.potions).reduce((a, b) => a + b, 0);
+const wildcard = (s) => s.cid === "alchemist" && s.ultTime > 0;
+const brewTime = (s, pid) => POTIONS[pid].time * (s.cid === "alchemist" ? 0.75 : 1);
+function setPrice(s, pid, v) { if (pid in s.prices) s.prices[pid] = clamp(v, T.MIN_PRICE, T.MAX_PRICE); }
+function canBrew(s, pid) {
+  if (!knows(s, pid) || s.queue.length >= T.MAX_QUEUE) return false;
+  const cost = POTIONS[pid].cost;
+  if (wildcard(s)) return totalIng(s) >= cost.reduce((a, [, n]) => a + n, 0);
+  return cost.every(([i, n]) => s.ing[i] >= n);
+}
+function startBrew(s, pid) {
+  if (!canBrew(s, pid)) return false;
+  let deficit = 0;
+  for (const [i, n] of POTIONS[pid].cost) {
+    const take = Math.min(n, s.ing[i]);
+    s.ing[i] -= take;
+    deficit += n - take;
+  }
+  while (deficit > 0) { // only during Philosopher's Hour
+    const b = mostStocked(s, -1);
+    if (b < 0 || s.ing[b] <= 0) break;
+    s.ing[b] -= 1;
+    deficit -= 1;
+  }
+  s.queue.push(pid);
+  return true;
+}
+function mostStocked(s, exclude) {
+  let best = -1;
+  for (let i = 0; i < 5; i++) {
+    if (i === exclude) continue;
+    if (best < 0 || s.ing[i] > s.ing[best]) best = i;
+  }
+  return best;
+}
+function canTransmute(s, target) {
+  if (s.cid !== "alchemist") return false;
+  const src = mostStocked(s, target);
+  return src >= 0 && s.ing[src] >= 2;
+}
+function transmute(s, target) {
+  if (!canTransmute(s, target)) return;
+  const src = mostStocked(s, target);
+  s.ing[src] -= 2;
+  s.ing[target] += 1;
+}
+function sell(s, pid) {
+  const p = priceOf(s, pid);
+  s.potions[pid] = stock(s, pid) - 1;
+  s.coins += p;
+  s.rep += s.cid === "apothecary" ? 2 : 1;
+  s.sold += 1;
+  return p;
+}
+function spoil(s) {
+  if (s.cid === "enchanter") return 0;
+  let lost = 0;
+  for (const pid of Object.keys(s.potions)) {
+    const gone = Math.floor(s.potions[pid] * T.SPOIL);
+    s.potions[pid] -= gone;
+    lost += gone;
+  }
+  return lost;
+}
+function tickShop(m, s, dt) {
+  s.t += dt;
+  if (s.ultTime > 0) s.ultTime = Math.max(0, s.ultTime - dt);
+  if (s.queue.length === 0) {
+    s.prog = 0;
+  } else {
+    s.prog += dt;
+    const pid = s.queue[0];
+    if (s.prog >= brewTime(s, pid)) {
+      s.prog = 0;
+      s.queue.shift();
+      s.potions[pid] = stock(s, pid) + 1;
+      if (s.isPlayer) floatText(m, s.x + 62, s.y - 40, "+1 " + POTIONS[pid].name, POTIONS[pid].color);
+    }
+  }
+  if (s.cid === "herbalist") {
+    s.gh += dt;
+    if (s.gh >= T.GREENHOUSE) {
+      s.gh -= T.GREENHOUSE;
+      const i = Math.floor(Math.random() * 5);
+      s.ing[i] += 1;
+      if (s.isPlayer) floatText(m, s.x - 60, s.y - 40, "+1 " + ING[i], ING_COLOR[i]);
+    }
+  }
+}
+const counterHit = (s, x, y) => x >= s.x - 75 && x <= s.x + 75 && y >= s.y - 115 && y <= s.y + 10;
+
+// =====================================================================
+// Familiars
+// =====================================================================
+const isDown = (f) => f.state === "ko";
+const isImmune = (f) => f.shop.cid === "apothecary" && f.shop.ultTime > 0;
+const isSafe = (f) => f.y > ROW_TOP - 10 && f.y < ROW_BOTTOM + 10;
+const isWorking = (f) => f.state === "toGrove" || f.state === "gathering" || (f.state === "returning" && f.grove);
+const groveRadius = (g) => 24 * (g.rich ? 1.35 : 1);
+const canHarvest = (g, s) => (!g.blightedBy || g.blightedBy === s) && g.amount >= 1;
+
+function assignGrove(f, g) {
+  f.grove = g;
+  if (isDown(f)) return;
+  f.state = f.cargo > 0 && f.cargoIng !== g.ing ? "returning" : "toGrove";
+}
+function recall(f) {
+  f.grove = null;
+  if (isDown(f)) return;
+  if (f.cargo > 0) f.state = "returning";
+  else { f.tx = f.hx; f.ty = f.hy; f.state = "moving"; }
+}
+function moveTo(f, x, y) {
+  if (isDown(f)) return;
+  f.grove = null; f.tx = x; f.ty = y; f.state = "moving";
+}
+function knockOut(f) {
+  if (isDown(f)) return;
+  f.cargo = 0; f.cargoIng = -1; f.acc = 0;
+  f.koTotal = T.KO / (f.shop.cid === "apothecary" ? 3 : 1);
+  f.koLeft = f.koTotal;
+  f.state = "ko";
+  f.x = f.hx; f.y = f.hy;
+}
+function recover(f) { f.state = f.grove ? "toGrove" : "idle"; }
+function stepTowards(f, tx, ty, dt, stop) {
+  const dx = tx - f.x, dy = ty - f.y, d = Math.hypot(dx, dy);
+  if (d <= stop) return true;
+  const step = f.speed * dt;
+  if (step >= d - stop) { f.x += (dx / d) * (d - stop); f.y += (dy / d) * (d - stop); return true; }
+  f.x += (dx / d) * step; f.y += (dy / d) * step;
+  return false;
+}
+function tickFamiliar(m, f, dt) {
+  f.bob += dt * 4;
+  switch (f.state) {
+    case "ko":
+      f.koLeft -= dt;
+      if (f.koLeft <= 0) recover(f);
+      break;
+    case "moving":
+      if (stepTowards(f, f.tx, f.ty, dt, 2)) f.state = "idle";
+      break;
+    case "toGrove":
+      if (!f.grove) f.state = "idle";
+      else if (stepTowards(f, f.grove.x, f.grove.y, dt, groveRadius(f.grove) * 0.8)) { f.state = "gathering"; f.acc = 0; }
+      break;
+    case "gathering": {
+      const g = f.grove;
+      if (!g) { f.state = "idle"; break; }
+      if (!canHarvest(g, f.shop)) {
+        const alt = findGrove(m, g.ing, f.x, f.y, f.shop, g);
+        if (alt) { f.grove = alt; f.state = "toGrove"; }
+        else if (f.cargo > 0) f.state = "returning";
+        break;
+      }
+      const rate = f.shop.cid === "herbalist" && f.shop.ultTime > 0 ? 2 : 1;
+      f.acc += (dt * rate) / T.GATHER;
+      if (f.acc >= 1) {
+        f.acc -= 1;
+        if (g.amount >= 1) { g.amount -= 1; f.cargoIng = g.ing; f.cargo += 1; }
+        if (f.cargo >= f.carry) f.state = "returning";
+      }
+      break;
+    }
+    case "returning":
+      if (stepTowards(f, f.shop.x, f.shop.y + 14, dt, 6)) {
+        if (f.cargo > 0 && f.cargoIng >= 0) f.shop.ing[f.cargoIng] += f.cargo;
+        f.cargo = 0; f.cargoIng = -1;
+        if (f.grove) f.state = "toGrove";
+        else { f.tx = f.hx; f.ty = f.hy; f.state = "moving"; }
+      }
+      break;
+  }
+}
+function findGrove(m, ing, x, y, s, exclude) {
+  let best = null, bestD = Infinity;
+  for (const g of m.groves) {
+    if (g === exclude || g.ing !== ing || !canHarvest(g, s)) continue;
+    const d = dist(x, y, g.x, g.y);
+    if (d < bestD) { bestD = d; best = g; }
+  }
+  return best;
+}
+const countAssigned = (m, g) => m.familiars.reduce((n, f) => n + (f.grove === g ? 1 : 0), 0);
+
+// =====================================================================
+// Gloomlings (night creatures)
+// =====================================================================
+function spawnGloom(m, side) {
+  const ymin = side < 0 ? 30 : ROW_BOTTOM + 40, ymax = side < 0 ? ROW_TOP - 40 : H - 30;
+  const g = { side, ymin, ymax, x: rand(40, W - 40), y: side < 0 ? 40 : H - 40, tx: 0, ty: 0,
+    chasing: null, dead: false, t: Math.random() * 10 };
+  newGloomTarget(g);
+  m.glooms.push(g);
+}
+function newGloomTarget(g) { g.tx = rand(30, W - 30); g.ty = rand(g.ymin, g.ymax); }
+function nearestPrey(m, g) {
+  let best = null, bestD = T.CHASE_R;
+  for (const f of m.familiars) {
+    if (isDown(f) || isImmune(f) || isSafe(f)) continue;
+    const onSide = g.side < 0 ? f.y < ROW_TOP : f.y > ROW_BOTTOM;
+    if (!onSide) continue;
+    const d = dist(g.x, g.y, f.x, f.y);
+    if (d < bestD) { bestD = d; best = f; }
+  }
+  return best;
+}
+function tickGloom(m, g, dt) {
+  if (g.dead) return;
+  g.t += dt;
+  g.chasing = nearestPrey(m, g);
+  const tx = g.chasing ? g.chasing.x : g.tx, ty = g.chasing ? g.chasing.y : g.ty;
+  const spd = g.chasing ? T.GLOOM_CHASE : T.GLOOM_SPEED;
+  const dx = tx - g.x, dy = ty - g.y, d = Math.hypot(dx, dy);
+  if (!g.chasing && d < 4) newGloomTarget(g);
+  else if (d > 0.001) { const s = Math.min(spd * dt, d); g.x += (dx / d) * s; g.y += (dy / d) * s; }
+  g.y = clamp(g.y, g.ymin, g.ymax);
+  if (g.chasing && dist(g.x, g.y, g.chasing.x, g.chasing.y) < 14) gloomTouch(m, g, g.chasing);
+}
+function gloomTouch(m, g, f) {
+  if (g.dead || isDown(f)) return;
+  const fname = f.shop.d.familiar;
+  if (f.shop.cid === "hexer" && Math.random() < T.HEX_BANISH) {
+    g.dead = true;
+    floatText(m, f.x, f.y - 20, "Banished!", "#ff8080");
+    if (f.shop.isPlayer) logEvent(m, `One of your ${fname} banished a Gloomling!`);
+    return;
+  }
+  floatText(m, f.x, f.y - 20, "Knocked out!", "#ccb3ff");
+  if (f.shop.isPlayer) logEvent(m, `A Gloomling knocked out one of your ${fname}. It dropped its load.`);
+  knockOut(f);
+}
+
+// =====================================================================
+// Customers
+// =====================================================================
+function spawnCustomer(m) {
+  const conn = Math.random() < T.CONN;
+  const wants = conn ? pick(m.shops.map((s) => s.d.signature)) : pickBasic(m);
+  let mult = rand(1, 1.6);
+  if (wants === m.favored) mult *= 1.5;
+  const [kind, color] = pick(CUSTOMER_KINDS);
+  const fromLeft = Math.random() < 0.5;
+  m.customers.push({
+    kind: conn ? "A connoisseur" : kind, color, wants, conn,
+    budget: Math.ceil(POTIONS[wants].value * mult),
+    dir: fromLeft ? 1 : -1, speed: rand(60, 80), target: null, mood: "looking", done: false,
+    recheck: 0, patience: 22, t: Math.random() * 10,
+    x: fromLeft ? -20 : W + 20, y: LANE_Y + rand(-6, 6),
+  });
+}
+function chooseShop(m, c) {
+  let best = null, bestPrice = 0;
+  for (const s of m.shops) {
+    if (stock(s, c.wants) <= 0) continue;
+    const p = priceOf(s, c.wants);
+    if (p > c.budget) continue;
+    if (s.cid === "enchanter" && s.ultTime > 0) return s; // Enthrall
+    let better = !best || p < bestPrice;
+    if (!better && p === bestPrice) better = s.rep > best.rep || (s.rep === best.rep && Math.random() < 0.5);
+    if (better) { best = s; bestPrice = p; }
+  }
+  return best;
+}
+function tryBuy(m, c, s) {
+  if (stock(s, c.wants) <= 0 || priceOf(s, c.wants) > c.budget) return false;
+  const p = sell(s, c.wants);
+  floatText(m, s.x, s.y - 140, `+${p}c`, "#ffd94d");
+  const pname = POTIONS[c.wants].name;
+  logEvent(m, s.isPlayer ? `${c.kind} bought ${pname} from you for ${p}c.` : `${c.kind} bought ${pname} from ${s.name} for ${p}c.`);
+  return true;
+}
+function tickCustomer(m, c, dt) {
+  c.t += dt;
+  if (c.mood === "looking") {
+    c.patience -= dt;
+    if (c.patience <= 0) {
+      c.mood = "sad";
+    } else {
+      if (!c.target) {
+        c.recheck -= dt;
+        if (c.recheck <= 0) { c.recheck = 1; c.target = chooseShop(m, c); }
+      }
+      if (c.target) {
+        const tx = c.target.x;
+        if (Math.abs(tx - c.x) <= c.speed * dt + 1) {
+          c.x = tx;
+          if (tryBuy(m, c, c.target)) c.mood = "happy";
+          c.target = null; c.recheck = 0;
+        } else {
+          c.x += Math.sign(tx - c.x) * c.speed * dt;
+        }
+        return;
+      }
+    }
+  }
+  c.x += c.dir * c.speed * dt;
+  if (c.x < -40 || c.x > W + 40) c.done = true;
+}
+
+// =====================================================================
+// Demand, clock, log
+// =====================================================================
+function rollDemand(m) { m.demand = {}; for (const pid of BASIC) m.demand[pid] = rand(0.4, 2); }
+const demandWeight = (m, pid) => (m.demand[pid] || 0) * (pid === m.favored ? 3 : 1);
+function topDemand(m) { return BASIC.reduce((a, b) => (demandWeight(m, b) > demandWeight(m, a) ? b : a), BASIC[0]); }
+function pickBasic(m) {
+  const total = BASIC.reduce((a, pid) => a + demandWeight(m, pid), 0);
+  let r = Math.random() * total;
+  for (const pid of BASIC) { r -= demandWeight(m, pid); if (r <= 0) return pid; }
+  return BASIC[0];
+}
+function logEvent(m, text) { m.log.push(text); while (m.log.length > 7) m.log.shift(); }
+function floatText(m, x, y, text, color) { m.floats.push({ x, y, text, color, age: 0 }); }
+
+function startDay(m, first) {
+  m.night = false;
+  m.phaseLeft = T.DAY;
+  m.custAcc = 0;
+  m.glooms = [];
+  for (const g of m.groves) g.blightedBy = null;
+  m.favored = "";
+  if (!first) {
+    for (const s of m.shops) {
+      const lost = spoil(s);
+      if (s.isPlayer && lost > 0) logEvent(m, `Dawn: ${lost} of your unsold potions spoiled.`);
+    }
+  }
+  for (const s of m.shops) s.ultReady = true;
+  rollDemand(m);
+  logEvent(m, `Day ${m.day}. Gather and brew! Rumor says tonight's shoppers want ${POTIONS[topDemand(m)].name}.`);
+  if (first) logEvent(m, "Tip: drag a box around your familiars (or tap them), then tap a grove to send them gathering.");
+  if (m.ai) m.ai.onPhase();
+  showBanner(`Day ${m.day}`, "Gather ingredients and brew for tonight");
+}
+function startNight(m) {
+  m.night = true;
+  m.phaseLeft = T.NIGHT;
+  m.custAcc = T.CUST_NIGHT;
+  for (const side of [-1, 1]) for (let i = 0; i < 2 + m.day; i++) spawnGloom(m, side);
+  logEvent(m, "Night falls and the market opens! Gloomlings stir in the woods. Press R to recall your familiars.");
+  m.ai.onPhase();
+  showBanner(`Night ${m.day}`, "The market is open. Beware the woods.");
+}
+function advanceClock(m, dt) {
+  m.phaseLeft -= dt;
+  if (m.phaseLeft > 0) return;
+  if (!m.night) startNight(m);
+  else if (m.day >= T.DAYS) finishMatch(m);
+  else { m.day += 1; startDay(m, false); }
+}
+function finishMatch(m) {
+  m.finished = true;
+  m.targeting = false;
+  const summary = {
+    rivalName: m.rival.name, rivalClass: m.rival.d.name,
+    playerCoins: m.player.coins, rivalCoins: m.rival.coins,
+    playerSold: m.player.sold, rivalSold: m.rival.sold,
+    playerRep: m.player.rep, rivalRep: m.rival.rep,
+    won: m.player.coins > m.rival.coins, tied: m.player.coins === m.rival.coins, missed: m.missed,
+  };
+  const progress = Save.recordMatch(summary.playerCoins, summary.won);
+  showResults(summary, progress);
+}
+
+// =====================================================================
+// Ultimates
+// =====================================================================
+function activateUlt(m, s, target) {
+  if (!s.ultReady || m.finished) return false;
+  switch (s.cid) {
+    case "herbalist": for (const g of m.groves) g.amount = g.max; s.ultTime = 20; break;
+    case "alchemist": s.ultTime = 30; break;
+    case "apothecary":
+      for (const f of s.fams) if (isDown(f)) { f.koLeft = 0; recover(f); }
+      s.ultTime = 25; break;
+    case "enchanter": s.ultTime = 20; break;
+    case "hexer":
+      if (!target || target.ing === undefined) return false;
+      target.blightedBy = s;
+      floatText(m, target.x, target.y - 40, "Blighted!", "#cc66ff");
+      break;
+    case "seer":
+      if (!BASIC.includes(target)) return false;
+      m.favored = target;
+      break;
+    default: return false;
+  }
+  s.ultReady = false;
+  const extra = s.cid === "seer" ? ` ${POTIONS[m.favored].name} is favored tonight.` : "";
+  logEvent(m, `${s.isPlayer ? "You" : s.name} used ${s.d.ult}!${extra}`);
+  return true;
+}
+function playerUseUlt() {
+  if (!M || M.finished || !M.player.ultReady) return;
+  if (M.player.cid === "hexer") M.targeting = true;
+  else if (M.player.cid === "seer") openProphecy();
+  else activateUlt(M, M.player);
+  refreshHud();
+}
+
+// =====================================================================
+// Rival AI. Same rules as the player; reused later for bots in PvP.
+// =====================================================================
+function makeAI(m, s) {
+  const ai = { think: 0, priceThink: 0, phaseTime: 0, recallAfter: 0, ultAt: 0, recalled: false };
+  const score = (pid) => {
+    const w = isSignature(pid) ? 0.9 : demandWeight(m, pid);
+    return (w * POTIONS[pid].value) / (1 + stock(s, pid) * 0.6);
+  };
+  const ranked = () => recipesFor(s.cid).sort((a, b) => score(b) - score(a));
+  const nightDanger = () => m.night && !(s.cid === "apothecary" && s.ultTime > 0) && s.cid !== "hexer";
+  function needs() {
+    const need = [0, 0, 0, 0, 0];
+    ranked().slice(0, 3).forEach((pid, i) => { for (const [ing, n] of POTIONS[pid].cost) need[ing] += n * (3 - i); });
+    for (let i = 0; i < 5; i++) need[i] -= s.ing[i];
+    for (const f of s.fams) {
+      if (f.cargo > 0 && f.cargoIng >= 0) need[f.cargoIng] -= f.cargo;
+      if (f.grove) need[f.grove.ing] -= 1.5;
+    }
+    return need;
+  }
+  function pickGrove(need, f) {
+    let best = null, bestScore = -Infinity;
+    for (const g of m.groves) {
+      if (!canHarvest(g, s) || g.amount < 2) continue;
+      const sc = Math.max(need[g.ing], 0.1) * 10 - dist(f.x, f.y, g.x, g.y) * 0.02 - countAssigned(m, g) * 4;
+      if (sc > bestScore) { bestScore = sc; best = g; }
+    }
+    return best;
+  }
+  function manageFamiliars() {
+    if (nightDanger() && ai.phaseTime >= ai.recallAfter) {
+      if (!ai.recalled) { ai.recalled = true; s.fams.forEach(recall); }
+      return;
+    }
+    ai.recalled = false;
+    const need = needs();
+    for (const f of s.fams) {
+      if (isDown(f) || f.grove || f.state === "returning") continue;
+      const g = pickGrove(need, f);
+      if (g) { assignGrove(f, g); need[g.ing] -= 2; }
+    }
+  }
+  function manageBrewing() {
+    if (s.queue.length >= 3) return;
+    for (const pid of ranked()) {
+      if (stock(s, pid) >= 6) continue;
+      if (startBrew(s, pid)) return;
+    }
+  }
+  function managePrices() {
+    const p = m.player;
+    for (const pid of recipesFor(s.cid)) {
+      const value = POTIONS[pid].value;
+      const lowest = Math.max(1, Math.round(value * 0.7));
+      let target = value + 2;
+      if (knows(p, pid) && stock(p, pid) > 0) {
+        target = priceOf(p, pid);
+        if (stock(s, pid) >= 2 && Math.random() < 0.7) target -= 1;
+      }
+      if (stock(s, pid) >= 5) target -= 1;
+      setPrice(s, pid, clamp(target, lowest, value * 2));
+    }
+  }
+  function busiestPlayerGrove() {
+    const counts = new Map();
+    for (const f of m.player.fams) if (f.grove) counts.set(f.grove, (counts.get(f.grove) || 0) + 1);
+    let best = null, n = 0;
+    for (const [g, c] of counts) if (c > n) { n = c; best = g; }
+    return best;
+  }
+  function bestProphecy() {
+    let best = BASIC[0], bestScore = -Infinity;
+    for (const pid of BASIC) {
+      const sc = stock(s, pid) * 2 + demandWeight(m, pid) + (canBrew(s, pid) ? 1 : 0);
+      if (sc > bestScore) { bestScore = sc; best = pid; }
+    }
+    return best;
+  }
+  function maybeUlt() {
+    if (!s.ultReady || ai.phaseTime < ai.ultAt) return;
+    if ((s.cid === "herbalist" || s.cid === "alchemist") && !m.night) activateUlt(m, s);
+    else if ((s.cid === "apothecary" || s.cid === "enchanter") && m.night && totalPotions(s) >= 3) activateUlt(m, s);
+    else if (s.cid === "hexer" && !m.night) { const g = busiestPlayerGrove(); if (g) activateUlt(m, s, g); }
+    else if (s.cid === "seer" && !m.night) activateUlt(m, s, bestProphecy());
+  }
+  ai.onPhase = () => {
+    ai.phaseTime = 0;
+    ai.recalled = false;
+    ai.recallAfter = rand(1, 7);
+    ai.ultAt = m.night ? rand(8, 30) : rand(15, 50);
+  };
+  ai.tick = (dt) => {
+    ai.phaseTime += dt;
+    ai.think += dt;
+    ai.priceThink += dt;
+    if (ai.think >= 0.75) { ai.think = 0; manageFamiliars(); manageBrewing(); maybeUlt(); }
+    if (ai.priceThink >= 3) { ai.priceThink = 0; managePrices(); }
+  };
+  return ai;
+}
+
+// =====================================================================
+// Simulation step
+// =====================================================================
+function step(m, dt) {
+  advanceClock(m, dt);
+  if (m.finished) return;
+  for (const g of m.groves) {
+    g.t += dt;
+    if (g.amount < g.max) g.amount = Math.min(g.max, g.amount + dt / g.regrow);
+  }
+  for (const s of m.shops) tickShop(m, s, dt);
+  for (const f of m.familiars) tickFamiliar(m, f, dt);
+  for (const g of m.glooms) tickGloom(m, g, dt);
+  m.custAcc += dt;
+  const interval = m.night ? T.CUST_NIGHT : T.CUST_DAY;
+  while (m.custAcc >= interval) { m.custAcc -= interval; spawnCustomer(m); }
+  for (const c of m.customers) tickCustomer(m, c, dt);
+  for (const c of m.customers) if (c.done && c.mood !== "happy") m.missed += 1;
+  m.customers = m.customers.filter((c) => !c.done);
+  m.glooms = m.glooms.filter((g) => !g.dead);
+  m.ai.tick(dt);
+  for (const ft of m.floats) { ft.age += dt; ft.y -= 24 * dt; }
+  m.floats = m.floats.filter((ft) => ft.age < 1.4);
+}
+
+// =====================================================================
+// Rendering (canvas)
+// =====================================================================
+const canvas = $("field");
+const ctx = canvas.getContext("2d");
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+const FONT = '"Atkinson Hyperlegible", system-ui, sans-serif';
+let bgLayer = null;
+
+function buildBackground() {
+  const c = document.createElement("canvas");
+  c.width = W * DPR; c.height = H * DPR;
+  const g = c.getContext("2d");
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.fillStyle = "#21452b";
+  g.fillRect(0, 0, W, H);
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 190; i++) {
+    const x = rnd() * W, y = rnd() * H;
+    if (y > ROW_TOP - 25 && y < ROW_BOTTOM + 15) continue;
+    const r = 9 + rnd() * 12, sh = rnd() * 0.08;
+    g.fillStyle = "rgba(0,0,0,0.18)";
+    g.beginPath(); g.arc(x, y + r * 0.35, r, 0, 6.283); g.fill();
+    g.fillStyle = `rgb(${Math.round((0.11 + sh) * 255)},${Math.round((0.25 + sh * 1.5) * 255)},${Math.round((0.15 + sh) * 255)})`;
+    g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
+  }
+  g.fillStyle = "#615449";
+  g.fillRect(0, ROW_TOP, W, ROW_BOTTOM - ROW_TOP);
+  for (let i = 0; i < 300; i++) {
+    const v = Math.round((rnd() - 0.5) * 20);
+    g.fillStyle = `rgb(${107 + v},${94 + v},${84 + v})`;
+    g.fillRect(rnd() * W, ROW_TOP + 4 + rnd() * (ROW_BOTTOM - ROW_TOP - 12), 9, 5);
+  }
+  g.fillStyle = "#40332b";
+  g.fillRect(0, ROW_TOP - 4, W, 4);
+  g.fillRect(0, ROW_BOTTOM, W, 4);
+  bgLayer = c;
+}
+
+function circle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); }
+function ring(x, y, r, color, w, a0 = 0, a1 = 6.2832) {
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(x, y, r, a0, a1); ctx.stroke();
+}
+function poly(points, color) {
+  ctx.fillStyle = color; ctx.beginPath();
+  points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.closePath(); ctx.fill();
+}
+function text(str, x, y, size, color, outline) {
+  ctx.font = `700 ${size}px ${FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  if (outline) { ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,0.85)"; ctx.strokeText(str, x, y); }
+  ctx.fillStyle = color;
+  ctx.fillText(str, x, y);
+}
+
+function drawGrove(g) {
+  const r = groveRadius(g);
+  let col = ING_COLOR[g.ing];
+  let leaf = darken(col, 0.55);
+  if (g.blightedBy) { col = mix(col, "#595059", 0.65); leaf = "#382b38"; }
+  circle(g.x, g.y + r * 0.4, r * 1.05, "rgba(0,0,0,0.25)");
+  circle(g.x - r * 0.45, g.y, r * 0.62, leaf);
+  circle(g.x + r * 0.45, g.y, r * 0.62, leaf);
+  circle(g.x, g.y - r * 0.35, r * 0.68, lighten(leaf, 0.08));
+  const fruit = Math.min(Math.floor(g.amount), 10);
+  for (let i = 0; i < fruit; i++) {
+    const a = (6.2832 * i) / 10 + 0.4;
+    circle(g.x + Math.cos(a) * r * 0.55, g.y + Math.sin(a) * 0.8 * r * 0.55 - r * 0.1, g.rich ? 4.2 : 3.6, col);
+  }
+  if (g.rich && !g.blightedBy) {
+    const s = 0.5 + 0.5 * Math.sin(g.t * 3);
+    circle(g.x + r * 0.7, g.y - r * 0.8, 2 + s * 1.5, `rgba(255,255,255,${0.5 + s * 0.4})`);
+  }
+  const w = r * 2;
+  ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(g.x - w / 2, g.y + r + 4, w, 4);
+  ctx.fillStyle = col; ctx.fillRect(g.x - w / 2, g.y + r + 4, (w * g.amount) / g.max, 4);
+  text((g.rich ? "Rich " : "") + ING[g.ing], g.x, g.y + r + 21, 12, "rgba(255,255,255,0.85)", true);
+  if (g.blightedBy) {
+    ctx.strokeStyle = "#bf40f2"; ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(g.x - r * 0.6, g.y - r * 0.6); ctx.lineTo(g.x + r * 0.6, g.y + r * 0.6);
+    ctx.moveTo(g.x + r * 0.6, g.y - r * 0.6); ctx.lineTo(g.x - r * 0.6, g.y + r * 0.6); ctx.stroke();
+    text("BLIGHTED", g.x, g.y - r - 8, 11, "#cf73ff", true);
+  }
+}
+
+function drawShop(s) {
+  const { x, y, color } = s;
+  if (s.ultTime > 0) {
+    const p = 0.5 + 0.5 * Math.sin(s.t * 6);
+    ring(x, y - 45, 90 + p * 6, rgba(color, 0.35 + p * 0.3), 4);
+  }
+  ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(x - 72, y - 6, 144, 12);
+  ctx.fillStyle = "#664a38"; ctx.fillRect(x - 62, y - 78, 124, 78);
+  ctx.fillStyle = "#38261c"; ctx.fillRect(x - 50, y - 38, 100, 38);
+  poly([[x - 76, y - 76], [x + 76, y - 76], [x + 54, y - 112], [x - 54, y - 112]], darken(color, 0.25));
+  const sw = 124 / 6;
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = i % 2 === 0 ? lighten(color, 0.2) : darken(color, 0.05);
+    ctx.fillRect(x - 62 + i * sw, y - 78, sw, 14);
+  }
+  ctx.fillStyle = "#8c6647"; ctx.fillRect(x - 56, y - 42, 112, 7);
+  const pids = recipesFor(s.cid), gap = 104 / pids.length;
+  pids.forEach((pid, i) => {
+    const bx = x - 52 + gap * (i + 0.5), n = stock(s, pid);
+    ctx.globalAlpha = n > 0 ? 1 : 0.25;
+    ctx.fillStyle = "#ccbfb3"; ctx.fillRect(bx - 2, y - 60, 4, 5);
+    circle(bx, y - 50, 6, POTIONS[pid].color);
+    ctx.globalAlpha = 1;
+    text(String(n), bx, y - 18, 11, n > 0 ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.4)", false);
+  });
+  const cx = x + 78, cy = y - 12;
+  circle(cx, cy + 8, 16, "rgba(0,0,0,0.3)");
+  circle(cx, cy, 15, "#1f1f24");
+  ctx.fillStyle = "#404047"; ctx.fillRect(cx - 17, cy - 13, 34, 5);
+  if (s.queue.length) {
+    const pc = POTIONS[s.queue[0]].color;
+    circle(cx, cy - 9, 11, darken(pc, 0.2));
+    for (let b = 0; b < 3; b++) {
+      const ph = (s.t * 1.3 + b * 0.33) % 1;
+      circle(cx - 6 + b * 6, cy - 12 - ph * 18, 2.5 * (1 - ph) + 1, rgba(pc, 1 - ph));
+    }
+    ring(cx, cy, 20, pc, 3, -Math.PI / 2, -Math.PI / 2 + 6.2832 * clamp(s.prog / brewTime(s, s.queue[0]), 0, 1));
+  }
+  text(s.isPlayer ? "YOU - " + s.name : s.name, x, y - 122, 14, lighten(color, 0.35), true);
+}
+
+function drawFamiliarShape(c, cid, x, y, color, scale = 1) {
+  const g = c;
+  const C = (px, py, r, col) => { g.fillStyle = col; g.beginPath(); g.arc(x + px * scale, y + py * scale, r * scale, 0, 6.2832); g.fill(); };
+  const P = (pts, col) => {
+    g.fillStyle = col; g.beginPath();
+    pts.forEach(([px, py], i) => (i ? g.lineTo(x + px * scale, y + py * scale) : g.moveTo(x + px * scale, y + py * scale)));
+    g.closePath(); g.fill();
+  };
+  switch (cid) {
+    case "herbalist":
+      C(0, 0, 7, color);
+      P([[0, -6], [-9, -13], [-2, -4]], lighten(color, 0.3));
+      P([[0, -6], [9, -13], [2, -4]], lighten(color, 0.3));
+      break;
+    case "alchemist":
+      g.fillStyle = darken(color, 0.1); g.fillRect(x - 8 * scale, y - 8 * scale, 16 * scale, 16 * scale);
+      g.strokeStyle = lighten(color, 0.3); g.lineWidth = 2 * scale; g.strokeRect(x - 8 * scale, y - 8 * scale, 16 * scale, 16 * scale);
+      break;
+    case "apothecary":
+      P([[0, 0], [-11, -7], [-9, 6]], lighten(color, 0.2));
+      P([[0, 0], [11, -7], [9, 6]], lighten(color, 0.2));
+      C(0, 0, 4, darken(color, 0.3));
+      break;
+    case "enchanter":
+      C(0, 0, 10, rgba(color, 0.25)); C(0, 0, 6.5, rgba(color, 0.6)); C(0, 0, 3.5, "rgba(255,255,255,0.9)");
+      break;
+    case "hexer":
+      P([[0, -9], [8, 7], [-8, 7]], color);
+      g.strokeStyle = darken(color, 0.3); g.lineWidth = 2 * scale; g.beginPath();
+      g.moveTo(x - 4 * scale, y - 5 * scale); g.lineTo(x - 7 * scale, y - 12 * scale);
+      g.moveTo(x + 4 * scale, y - 5 * scale); g.lineTo(x + 7 * scale, y - 12 * scale); g.stroke();
+      break;
+    case "seer":
+      C(0, 0, 7, "#262138");
+      P([[6, -2], [13, 0], [6, 2]], "#ffcc4d");
+      g.strokeStyle = color; g.lineWidth = 2 * scale; g.beginPath(); g.arc(x, y, 7 * scale, Math.PI, 6.2832); g.stroke();
+      break;
+  }
+  C(-2.5, -1, 1.4, "#ffffff");
+  C(2.5, -1, 1.4, "#ffffff");
+}
+
+function drawFamiliar(f) {
+  const bob = Math.sin(f.bob) * 1.5;
+  if (isDown(f)) {
+    circle(f.x, f.y + bob, 8, "rgba(190,190,215,0.35)");
+    ring(f.x, f.y, 12, "rgba(255,255,255,0.7)", 2, -Math.PI / 2, -Math.PI / 2 + 6.2832 * (1 - clamp(f.koLeft / f.koTotal, 0, 1)));
+    return;
+  }
+  circle(f.x, f.y + 9, 7, "rgba(0,0,0,0.25)");
+  if (f.sel) ring(f.x, f.y + 4, 14, "#73ff8c", 2);
+  if (isImmune(f)) ring(f.x, f.y + bob, 16, "rgba(255,255,255,0.6)", 2);
+  drawFamiliarShape(ctx, f.shop.cid, f.x, f.y + bob, f.shop.color);
+  if (f.cargo > 0 && f.cargoIng >= 0) {
+    circle(f.x + 9, f.y - 11 + bob, 4, ING_COLOR[f.cargoIng]);
+    if (f.cargo > 1) text(String(f.cargo), f.x + 17, f.y - 7 + bob, 10, "#fff", true);
+  }
+}
+
+function drawGloom(g) {
+  const wob = Math.sin(g.t * 5) * 1.5;
+  const body = "rgba(26,10,41,0.92)";
+  circle(g.x, g.y + 10, 10, "rgba(0,0,0,0.3)");
+  circle(g.x, g.y + wob, 11, body);
+  for (let i = 0; i < 5; i++) {
+    const a = (6.2832 * i) / 5 + g.t;
+    circle(g.x + Math.cos(a) * 9, g.y + Math.sin(a) * 9 + wob, 5, body);
+  }
+  const eye = g.chasing ? "#ff404d" : "#ffe666";
+  circle(g.x - 4, g.y - 2 + wob, 2.2, eye);
+  circle(g.x + 4, g.y - 2 + wob, 2.2, eye);
+}
+
+function drawCustomer(c) {
+  const st = Math.sin(c.t * 8) * 1.5;
+  circle(c.x, c.y + 11, 8, "rgba(0,0,0,0.25)");
+  circle(c.x, c.y + 2 + st * 0.3, 9, darken(c.color, 0.15));
+  circle(c.x, c.y - 10, 6.5, c.color);
+  circle(c.x - 2.2, c.y - 11, 1.2, "#1a1a1a");
+  circle(c.x + 2.2, c.y - 11, 1.2, "#1a1a1a");
+  const bx = c.x, by = c.y - 32;
+  if (c.mood === "looking") {
+    circle(bx, by, 10, "rgba(255,255,255,0.92)");
+    ring(bx, by, 10, c.conn ? "#ffd94d" : "rgba(255,255,255,0.9)", c.conn ? 2 : 1);
+    ctx.fillStyle = "#807366"; ctx.fillRect(bx - 1.5, by - 7, 3, 4);
+    circle(bx, by + 1, 5, POTIONS[c.wants].color);
+  } else if (c.mood === "happy") {
+    circle(bx - 3, by - 1, 4, "#ff668c"); circle(bx + 3, by - 1, 4, "#ff668c");
+    poly([[bx - 7, by], [bx + 7, by], [bx, by + 8]], "#ff668c");
+  } else {
+    circle(bx, by, 9, "rgba(153,153,166,0.85)");
+    for (let i = 0; i < 3; i++) circle(bx - 4 + i * 4, by, 1.3, "#33333f");
+  }
+}
+
+function tintAmount(m) {
+  if (m.night) return m.day < T.DAYS && m.phaseLeft < 8 ? m.phaseLeft / 8 : 1;
+  return m.phaseLeft < 10 ? 1 - m.phaseLeft / 10 : 0;
+}
+
+function render(m) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (!bgLayer) buildBackground();
+  ctx.drawImage(bgLayer, 0, 0, W, H);
+  for (let i = 0; i < 9; i++) {
+    const x = 60 + i * 135;
+    for (const y of [ROW_TOP + 10, ROW_BOTTOM - 10]) {
+      ctx.fillStyle = "#26201a"; ctx.fillRect(x - 2, y - 2, 4, 10);
+      circle(x, y, 4, m.night ? "#ffd980" : "#736659");
+    }
+  }
+  text("MARKET ROW  (safe from Gloomlings)", 150, ROW_TOP + 34, 12, "rgba(255,255,255,0.35)", false);
+  m.groves.forEach(drawGrove);
+  m.shops.forEach(drawShop);
+  m.customers.forEach(drawCustomer);
+  m.familiars.forEach(drawFamiliar);
+  m.glooms.forEach(drawGloom);
+
+  const t = tintAmount(m);
+  if (t > 0) {
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = mix("#ffffff", "#7a80d1", t);
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 9; i++) {
+      const x = 60 + i * 135;
+      for (const y of [ROW_TOP + 10, ROW_BOTTOM - 10]) {
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, 34);
+        grad.addColorStop(0, `rgba(255,190,90,${0.35 * t})`);
+        grad.addColorStop(1, "rgba(255,190,90,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(x - 34, y - 34, 68, 68);
+      }
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  for (const ft of m.floats) {
+    ctx.globalAlpha = clamp(1 - ft.age / 1.4, 0, 1);
+    text(ft.text, ft.x, ft.y, 14, ft.color, true);
+  }
+  ctx.globalAlpha = 1;
+
+  // Overlay: assignment lines, drag box, blight targets.
+  for (const f of m.player.fams) {
+    if (f.sel && f.grove && !isDown(f)) {
+      ctx.strokeStyle = "rgba(115,255,140,0.3)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.grove.x, f.grove.y); ctx.stroke();
+    }
+  }
+  if (drag && drag.moved) {
+    const x = Math.min(drag.x0, drag.x1), y = Math.min(drag.y0, drag.y1);
+    const w = Math.abs(drag.x1 - drag.x0), h = Math.abs(drag.y1 - drag.y0);
+    ctx.fillStyle = "rgba(115,255,140,0.12)"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "rgba(115,255,140,0.8)"; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
+  }
+  if (m.targeting) {
+    for (const g of m.groves) ring(g.x, g.y, groveRadius(g) + 10, "rgba(204,89,255,0.8)", g === hoverGrove ? 3 : 1.5);
+  }
+}
+
+// =====================================================================
+// Input
+// =====================================================================
+let drag = null;
+let hoverGrove = null;
+
+function toWorld(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) * W) / r.width, y: ((e.clientY - r.top) * H) / r.height };
+}
+const groveAt = (m, x, y) => m.groves.find((g) => dist(x, y, g.x, g.y) <= groveRadius(g) + 8) || null;
+function familiarAt(m, x, y, radius) {
+  let best = null, bestD = radius;
+  for (const f of m.player.fams) {
+    if (isDown(f)) continue;
+    const d = dist(x, y, f.x, f.y);
+    if (d <= bestD) { bestD = d; best = f; }
+  }
+  return best;
+}
+const selected = () => M.player.fams.filter((f) => f.sel);
+function selectAll() { if (M) M.player.fams.forEach((f) => (f.sel = !isDown(f))); refreshHud(); }
+function recallFamiliars() {
+  if (!M) return;
+  let sel = selected();
+  if (!sel.length) sel = M.player.fams;
+  sel.forEach(recall);
+  logEvent(M, "Familiars recalled to the shop.");
+  refreshHud();
+}
+function command(m, x, y, allowMove) {
+  const sel = selected();
+  if (!sel.length) return false;
+  const g = groveAt(m, x, y);
+  if (g) {
+    sel.forEach((f) => assignGrove(f, g));
+    floatText(m, g.x, g.y - 36, "Gather here!", "#99ff99");
+    return true;
+  }
+  if (counterHit(m.player, x, y)) { sel.forEach(recall); return true; }
+  if (allowMove) {
+    const px = clamp(x, 10, W - 10), py = clamp(y, 10, H - 10);
+    sel.forEach((f, i) => moveTo(f, px + ((i % 3) - 1) * 20, py + Math.floor(i / 3) * 20));
+    return true;
+  }
+  return false;
+}
+
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+canvas.addEventListener("pointerdown", (e) => {
+  if (!M || M.finished || paused) return;
+  const p = toWorld(e);
+  if (e.button === 2) {
+    if (M.targeting) M.targeting = false;
+    else command(M, p.x, p.y, true);
+    refreshHud();
+    return;
+  }
+  if (e.button !== 0) return;
+  canvas.setPointerCapture(e.pointerId);
+  drag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y, moved: false, touch: e.pointerType !== "mouse", shift: e.shiftKey };
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!M) return;
+  const p = toWorld(e);
+  hoverGrove = M.targeting ? groveAt(M, p.x, p.y) : null;
+  if (!drag) return;
+  drag.x1 = p.x; drag.y1 = p.y;
+  if (dist(drag.x0, drag.y0, p.x, p.y) > 8) drag.moved = true;
+});
+canvas.addEventListener("pointerup", (e) => {
+  if (!drag || !M) return;
+  const d = drag;
+  drag = null;
+  if (M.finished || paused) return;
+  if (d.moved) {
+    const x0 = Math.min(d.x0, d.x1), x1 = Math.max(d.x0, d.x1), y0 = Math.min(d.y0, d.y1), y1 = Math.max(d.y0, d.y1);
+    if (!d.shift) M.player.fams.forEach((f) => (f.sel = false));
+    for (const f of M.player.fams) if (!isDown(f) && f.x >= x0 && f.x <= x1 && f.y >= y0 && f.y <= y1) f.sel = true;
+  } else {
+    const { x0: x, y0: y } = d;
+    if (M.targeting) {
+      const g = groveAt(M, x, y);
+      if (g && activateUlt(M, M.player, g)) M.targeting = false;
+    } else {
+      const f = familiarAt(M, x, y, d.touch ? 22 : 14);
+      if (f) {
+        if (d.shift || d.touch) f.sel = !f.sel;
+        else { M.player.fams.forEach((o) => (o.sel = false)); f.sel = true; }
+      } else if (!command(M, x, y, false)) {
+        M.player.fams.forEach((o) => (o.sel = false));
+      }
+    }
+  }
+  refreshHud();
+});
+canvas.addEventListener("pointercancel", () => { drag = null; });
+
+document.addEventListener("keydown", (e) => {
+  if (screen !== "game" || !M || M.finished) return;
+  if (e.key === "Escape") {
+    if (M.targeting) M.targeting = false;
+    else if (!$("prophecyLayer").hidden) $("prophecyLayer").hidden = true;
+    else togglePause();
+    e.preventDefault();
+    return;
+  }
+  if (paused || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "a") selectAll();
+  else if (k === "r") recallFamiliars();
+  else if (k === "q") playerUseUlt();
+  else if (k >= "1" && k <= "6") { const list = recipesFor(M.player.cid); startBrew(M.player, list[Number(k) - 1]); }
+  else return;
+  e.preventDefault();
+  refreshHud();
+});
+
+function togglePause() {
+  paused = !paused;
+  $("pauseLayer").hidden = !paused;
+  $("pauseBtn").textContent = paused ? "Resume" : "Pause";
+}
+$("pauseBtn").addEventListener("click", togglePause);
+$("pauseLayer").addEventListener("click", (e) => {
+  const a = e.target.closest("[data-action]");
+  if (!a) return;
+  if (a.dataset.action === "resume") togglePause();
+  if (a.dataset.action === "abandon") { paused = false; $("pauseLayer").hidden = true; M = null; renderTitle(); }
+});
+
+function openProphecy() {
+  const el = $("prophecyPicker");
+  el.innerHTML = `<h2>Prophecy</h2><p class="muted">Choose tonight's favored potion. 3x as many shoppers will want it, and they'll pay up to 50% more.</p>` +
+    BASIC.map((pid) => `<button type="button" data-pid="${pid}" style="color:${lighten(POTIONS[pid].color, 0.3)}">${POTIONS[pid].name}</button>`).join("") +
+    `<button type="button" data-cancel="1">Cancel</button>`;
+  $("prophecyLayer").hidden = false;
+}
+$("prophecyLayer").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.pid && M) activateUlt(M, M.player, b.dataset.pid);
+  $("prophecyLayer").hidden = true;
+  refreshHud();
+});
+
+function showBanner(title, sub) {
+  const b = $("banner");
+  $("bannerTitle").textContent = title;
+  $("bannerSub").textContent = sub;
+  b.classList.remove("show");
+  void b.offsetWidth;
+  b.classList.add("show");
+}
+
+// =====================================================================
+// HUD (the ledger panel)
+// =====================================================================
+const hud = $("hud");
+function buildHud(m) {
+  const s = m.player, d = s.d, alch = s.cid === "alchemist";
+  const recipes = recipesFor(s.cid);
+  hud.innerHTML = `
+    <div class="phase"><strong id="hPhase"></strong><span class="muted num" id="hClock"></span></div>
+    <div class="bar"><i id="hBar"></i></div>
+    <div class="scores num"><span>Coins <b id="hCoins"></b></span><span>Reputation <b id="hRep"></b></span></div>
+    <div class="muted" id="hRival"></div>
+    <section>
+      <h3>${esc(d.name)} - ${esc(d.passive)}</h3>
+      <div class="muted">${esc(d.passiveDesc)}</div>
+      <button type="button" class="primary" id="hUlt" data-action="ult"></button>
+      <div class="muted">${esc(d.ultDesc)}</div>
+    </section>
+    <section>
+      <h3>Ingredients</h3>
+      <div class="ing-grid">${ING.map((n, i) => `
+        <span class="sw" style="background:${ING_COLOR[i]}"></span><span>${n}</span>
+        <b class="num" id="hIng${i}"></b>
+        ${alch ? `<button type="button" data-action="transmute" data-ing="${i}" title="Turn 2 of your most-stocked ingredient into 1 ${n}">+1</button>` : "<span></span>"}`).join("")}
+      </div>
+    </section>
+    <section>
+      <h3>Cauldron</h3>
+      <div id="hBrew"></div>
+      <div class="bar"><i id="hBrewBar"></i></div>
+      <div class="muted" id="hQueue"></div>
+      <div class="recipes">${recipes.map((pid, i) => `
+        <button type="button" data-action="brew" data-pid="${pid}" class="${isSignature(pid) ? "sig" : ""}"
+          title="Brew time ${brewTime(s, pid).toFixed(1)}s, base value ${POTIONS[pid].value}c"
+          style="color:${lighten(POTIONS[pid].color, 0.3)}">[${i + 1}] ${POTIONS[pid].name}<small>${costText(pid)}</small></button>`).join("")}
+      </div>
+    </section>
+    <section>
+      <h3>Stock and prices</h3>
+      <div class="muted">Change prices any time. Shoppers buy from the cheapest shop.</div>
+      <div class="prices">
+        <span class="h">Potion</span><span class="h">Have</span><span></span><span class="h">Price</span><span></span><span class="h">Rival</span>
+        ${recipes.map((pid) => `
+          <span style="color:${lighten(POTIONS[pid].color, 0.2)}">${POTIONS[pid].name}</span>
+          <b class="num" id="hStock-${pid}"></b>
+          <button type="button" data-action="price" data-pid="${pid}" data-delta="-1" aria-label="Lower ${POTIONS[pid].name} price">-</button>
+          <span class="price num" id="hPrice-${pid}"></span>
+          <button type="button" data-action="price" data-pid="${pid}" data-delta="1" aria-label="Raise ${POTIONS[pid].name} price">+</button>
+          <span class="muted num" id="hRivalPrice-${pid}"></span>`).join("")}
+      </div>
+    </section>
+    <section><h3>Tonight's demand</h3><div class="log" id="hForecast"></div></section>
+    <section>
+      <h3>Your ${esc(d.familiar)}</h3>
+      <div id="hFam"></div>
+      <div class="row">
+        <button type="button" data-action="selectAll">Select all (A)</button>
+        <button type="button" data-action="recall">Recall (R)</button>
+      </div>
+    </section>
+    <section><h3>Market log</h3><div class="log" id="hLog"></div></section>
+    <section>
+      <details>
+        <summary>Controls</summary>
+        <ul>
+          <li>Drag a box, or tap familiars, to select them (Shift adds).</li>
+          <li>Tap or right-click a grove to gather there. They keep going on their own.</li>
+          <li>Tap or right-click your shop to send them home. Right-click ground to move.</li>
+          <li>Keys: A select all, R recall, Q ultimate, 1-6 brew, Esc pause.</li>
+        </ul>
+      </details>
+    </section>`;
+  refreshHud();
+}
+hud.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b || !M || M.finished) return;
+  const s = M.player;
+  switch (b.dataset.action) {
+    case "ult": playerUseUlt(); break;
+    case "transmute": transmute(s, Number(b.dataset.ing)); break;
+    case "brew": startBrew(s, b.dataset.pid); break;
+    case "price": setPrice(s, b.dataset.pid, priceOf(s, b.dataset.pid) + Number(b.dataset.delta)); break;
+    case "selectAll": selectAll(); break;
+    case "recall": recallFamiliars(); break;
+  }
+  refreshHud();
+});
+
+function setText(id, v) { const el = $(id); if (el && el.textContent !== v) el.textContent = v; }
+function refreshHud() {
+  const m = M;
+  if (!m || screen !== "game") return;
+  const s = m.player, r = m.rival, d = s.d;
+  const total = m.night ? T.NIGHT : T.DAY;
+  setText("hPhase", `${m.night ? "Night" : "Day"} ${m.day} of ${T.DAYS}`);
+  setText("hClock", `${Math.max(0, Math.ceil(m.phaseLeft))}s left`);
+  $("hBar").style.width = `${clamp((1 - m.phaseLeft / total) * 100, 0, 100)}%`;
+  setText("hCoins", String(s.coins));
+  setText("hRep", String(s.rep));
+  setText("hRival", `Rival: ${r.name} (${r.d.name}), ${r.coins}c, reputation ${r.rep}`);
+  const ult = $("hUlt");
+  setText("hUlt", s.ultTime > 0 ? `${d.ult}: active ${Math.ceil(s.ultTime)}s` : s.ultReady ? `[Q] ${d.ult}: ready` : `${d.ult}: used, recharges at dawn`);
+  ult.disabled = !s.ultReady;
+  $("hint").hidden = !m.targeting;
+  for (let i = 0; i < 5; i++) setText(`hIng${i}`, String(s.ing[i]));
+  hud.querySelectorAll('[data-action="transmute"]').forEach((b) => (b.disabled = !canTransmute(s, Number(b.dataset.ing))));
+  if (s.queue.length) {
+    setText("hBrew", `Brewing ${POTIONS[s.queue[0]].name}`);
+    $("hBrewBar").style.width = `${clamp((s.prog / brewTime(s, s.queue[0])) * 100, 0, 100)}%`;
+  } else {
+    setText("hBrew", "Cauldron idle. Pick a recipe below.");
+    $("hBrewBar").style.width = "0%";
+  }
+  let q = `Queue ${s.queue.length}/${T.MAX_QUEUE}`;
+  if (s.queue.length > 1) q += `: next ${s.queue.slice(1).map((p) => POTIONS[p].name).join(", ")}`;
+  if (wildcard(s)) q += ". Philosopher's Hour: any ingredient works!";
+  setText("hQueue", q);
+  hud.querySelectorAll('[data-action="brew"]').forEach((b) => (b.disabled = !canBrew(s, b.dataset.pid)));
+  for (const pid of recipesFor(s.cid)) {
+    setText(`hStock-${pid}`, String(stock(s, pid)));
+    setText(`hPrice-${pid}`, `${priceOf(s, pid)}c`);
+    setText(`hRivalPrice-${pid}`, knows(r, pid) ? `${priceOf(r, pid)}c (${stock(r, pid)})` : "-");
+  }
+  const fc = [];
+  if (m.favored) fc.push(`Prophecy: ${POTIONS[m.favored].name} is favored (3x shoppers, +50% budget).`);
+  if (s.cid === "seer") {
+    [...BASIC].sort((a, b) => demandWeight(m, b) - demandWeight(m, a))
+      .forEach((pid) => fc.push(`${POTIONS[pid].name}  x${demandWeight(m, pid).toFixed(1)}`));
+    fc.push("Observatory: you see the full forecast.");
+  } else {
+    fc.push(`Rumor: shoppers are after ${POTIONS[topDemand(m)].name}.`);
+    fc.push("Connoisseurs pay well for signature potions.");
+  }
+  const fcHtml = fc.map((l) => `<div>${esc(l)}</div>`).join("");
+  if ($("hForecast").innerHTML !== fcHtml) $("hForecast").innerHTML = fcHtml;
+  let working = 0, idle = 0, down = 0, sel = 0;
+  for (const f of s.fams) {
+    if (f.sel) sel++;
+    if (isDown(f)) down++; else if (isWorking(f)) working++; else idle++;
+  }
+  let famText = `${working} gathering, ${idle} idle, ${down} knocked out. ${sel} selected.`;
+  if (m.night && working > 0 && !isImmune(s.fams[0])) famText += " Gloomlings hunt anything left in the woods!";
+  setText("hFam", famText);
+  const logHtml = m.log.map((l) => `<div>${esc(l)}</div>`).join("");
+  if ($("hLog").innerHTML !== logHtml) $("hLog").innerHTML = logHtml;
+}
+
+// =====================================================================
+// Screens
+// =====================================================================
+function show(which) {
+  screen = which;
+  $("title").hidden = which !== "title";
+  $("game").hidden = which !== "game";
+  $("results").hidden = which !== "results";
+  window.scrollTo(0, 0);
+}
+
+function familiarIcon(cid) {
+  const c = document.createElement("canvas");
+  c.width = 96; c.height = 96;
+  const g = c.getContext("2d");
+  drawFamiliarShape(g, cid, 48, 50, CLASSES[cid].color, 3);
+  return c;
+}
+
+function renderTitle() {
+  show("title");
+  const el = $("title");
+  const p = Save.data;
+  const head = `<header class="masthead"><h1>Cauldron Row</h1><p>A night-market potion strategy game. Prototype 0.1.</p></header>`;
+  if (!p.classId) {
+    el.innerHTML = head + `
+      <div class="lock-note"><h2>Choose your class. This choice is permanent.</h2>
+      <p class="muted">You'll level up and unlock a specialization path, but you can never switch class.</p></div>
+      <div class="class-grid">${CLASS_IDS.map((cid) => {
+        const d = CLASSES[cid];
+        return `<article class="class-card" style="border-color:${darken(d.color, 0.35)}">
+          <header><span data-icon="${cid}"></span><div><h3 style="color:${lighten(d.color, 0.3)}">${d.name}</h3><div class="role">${esc(d.role)}</div></div></header>
+          <dl>
+            <div><dt>Familiars: </dt><dd>${d.familiar} (${d.familiarDesc})</dd></div>
+            <div><dt>Passive, ${esc(d.passive)}: </dt><dd>${esc(d.passiveDesc)}</dd></div>
+            <div><dt>Ultimate, ${esc(d.ult)}: </dt><dd>${esc(d.ultDesc)}</dd></div>
+            <div><dt>Signature potion: </dt><dd>${POTIONS[d.signature].name}</dd></div>
+            <div><dt>Paths at level ${T.PATH_LEVEL}: </dt><dd>${d.paths[0]} or ${d.paths[1]}</dd></div>
+          </dl>
+          <span></span>
+          <button type="button" data-choose="${cid}">Become ${withArticle(d.name)}</button>
+        </article>`;
+      }).join("")}</div>
+      <p class="save-note">Your character is saved to ${Save.where}.</p>`;
+    el.querySelectorAll("[data-icon]").forEach((sp) => sp.replaceWith(familiarIcon(sp.dataset.icon)));
+  } else {
+    const d = CLASSES[p.classId], need = xpFor(p.level);
+    el.innerHTML = head + `
+      <div class="returning">
+        <div class="char-card" style="border-color:${darken(d.color, 0.3)}">
+          <header style="display:flex;gap:14px;align-items:center"><span data-icon="${p.classId}"></span>
+            <div><h2 style="color:${lighten(d.color, 0.3)}">${d.name}, level ${p.level}</h2>
+            <div class="muted num">XP ${p.xp} / ${need}</div></div></header>
+          <div class="bar"><i style="width:${clamp((p.xp / need) * 100, 0, 100)}%"></i></div>
+          <div class="muted num">Matches ${p.matches}, wins ${p.wins}, best takings ${p.best}c</div>
+          <div style="color:var(--gold)">${p.level >= T.PATH_LEVEL
+            ? `Path unlocked! Choosing between ${d.paths[0]} and ${d.paths[1]} arrives in a future build.`
+            : `At level ${T.PATH_LEVEL} you'll choose a path: ${d.paths[0]} or ${d.paths[1]}.`}</div>
+          <div class="muted"><b>Passive, ${esc(d.passive)}:</b> ${esc(d.passiveDesc)}</div>
+          <div class="muted"><b>Ultimate, ${esc(d.ult)}:</b> ${esc(d.ultDesc)}</div>
+        </div>
+        <button type="button" class="primary" id="playBtn" style="font-size:20px;padding:12px">Open the shop</button>
+        <p class="muted">Each match is 3 days. By day, send familiars into the woods for ingredients and brew potions.
+          At night the market opens: price your stock, beat the rival shop, and pull your familiars back before the
+          Gloomlings get them. Most coins wins.</p>
+        <button type="button" class="ghost" id="abandonBtn">Abandon character...</button>
+        <p class="save-note">Your character is saved to ${Save.where}.</p>
+      </div>`;
+    el.querySelectorAll("[data-icon]").forEach((sp) => sp.replaceWith(familiarIcon(sp.dataset.icon)));
+    $("playBtn").addEventListener("click", startGame);
+    $("abandonBtn").addEventListener("click", () => confirmModal(
+      "Abandon character?",
+      `This permanently deletes your level ${p.level} ${d.name} and all progress. It's the only way to pick a different class.`,
+      `Delete my ${d.name}`, "Keep it",
+      () => { Save.abandon(); renderTitle(); }));
+  }
+}
+$("title").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-choose]");
+  if (!b) return;
+  const cid = b.dataset.choose, d = CLASSES[cid];
+  confirmModal("This choice is permanent",
+    `Become ${withArticle(d.name)} for good? Your class is locked for the life of this character. You'll grow stronger and choose a path later, but you can't switch.`,
+    `Become ${withArticle(d.name)}`, "Let me think",
+    () => { Save.chooseClass(cid); renderTitle(); });
+});
+
+function confirmModal(title, body, okText, cancelText, onOk) {
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">${esc(title)}</h2><p>${esc(body)}</p>
+    <div class="actions"><button type="button" data-r="no">${esc(cancelText)}</button>
+    <button type="button" class="primary" data-r="yes">${esc(okText)}</button></div></div>`;
+  document.body.appendChild(back);
+  back.querySelector('[data-r="yes"]').focus();
+  back.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-r]");
+    if (!b && e.target !== back) return;
+    back.remove();
+    if (b && b.dataset.r === "yes") onOk();
+  });
+}
+
+function startGame() {
+  if (!Save.data.classId) return renderTitle();
+  const rivals = CLASS_IDS.filter((c) => c !== Save.data.classId);
+  paused = false;
+  $("pauseLayer").hidden = true;
+  $("prophecyLayer").hidden = true;
+  $("pauseBtn").textContent = "Pause";
+  show("game");
+  M = newMatch(Save.data.classId, pick(rivals));
+  buildHud(M);
+}
+
+function showResults(sum, progress) {
+  show("results");
+  const p = Save.data, d = CLASSES[p.classId];
+  const headline = sum.tied ? "A dead heat" : sum.won ? "Victory!" : "The rival out-earned you";
+  $("results").innerHTML = `
+    <h1>${headline}</h1>
+    <p class="num" style="font-size:18px">Your takings: <b>${sum.playerCoins}c</b> (${sum.playerSold} potions sold, reputation ${sum.playerRep})</p>
+    <p class="muted num" style="font-size:18px">${esc(sum.rivalName)} (${sum.rivalClass}): ${sum.rivalCoins}c (${sum.rivalSold} potions sold, reputation ${sum.rivalRep})</p>
+    <p class="muted num">Shoppers who left empty-handed: ${sum.missed}</p>
+    <h2 style="color:var(--gold);font-size:34px">+${progress.xp} XP</h2>
+    ${progress.levels > 0 ? `<p style="color:var(--good);font-size:18px">Level up! Your ${d.name} is now level ${p.level}.</p>` : ""}
+    <p class="muted num">Level ${p.level}, XP ${p.xp} / ${xpFor(p.level)}</p>
+    <button type="button" class="primary" id="continueBtn" style="font-size:18px;padding:10px">Continue</button>`;
+  $("continueBtn").addEventListener("click", () => { M = null; renderTitle(); });
+}
+
+// =====================================================================
+// Main loop
+// =====================================================================
+let last = performance.now();
+let hudAcc = 0;
+function frame(now) {
+  const raw = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (screen === "game" && M) {
+    if (!paused && !M.finished) {
+      const steps = Math.max(1, Math.round(SPEED));
+      for (let i = 0; i < steps && M && !M.finished; i++) step(M, raw * (SPEED / steps));
+    }
+    if (M && screen === "game") {
+      render(M);
+      hudAcc += raw;
+      if (hudAcc > 0.1) { hudAcc = 0; refreshHud(); }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// Testing hook: lets automated play-tests read state and speed the clock.
+window.__cauldron = { get match() { return M; }, setSpeed(v) { SPEED = v; }, save: Save };
+
+Save.loadLocal();
+renderTitle();
+requestAnimationFrame(frame);
+Save.connect();
+</script>
+<!-- ARTIFACT-END -->
+</body>
+</html>
