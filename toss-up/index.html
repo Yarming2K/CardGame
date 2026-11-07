@@ -1,0 +1,1859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toss-Up</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Settle a decision with a wheel, a deck of cards, a coin, a pegboard, a bracket, a knockout, a balance scale or an oracle.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='22' r='21' fill='%239c7428'/%3E%3Ccircle cx='22' cy='22' r='16.5' fill='%23d6a84b'/%3E%3Cpath d='M14.5 15.5h15M22 15.5v15' stroke='%23221d18' stroke-width='3.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Gloock&display=swap">
+<style>
+/* Layout: a games table. A mahogany rail frames green felt; the options rack sits on the left of the felt,
+   the chosen game plays on the right, and each result comes out as a paper slip under the game. */
+:root {
+  --room: #1c120d;
+  --rail: #4a2d1d;
+  --rail-deep: #2b1a12;
+  --felt: #1d4a39;
+  --felt-deep: #143628;
+  --felt-hi: #2a5f4b;
+  --ivory: #f2e9d4;
+  --ivory-deep: #d9cdb0;
+  --ink: #221d18;
+  --ink-dim: rgba(34, 29, 24, .68);
+  --brass: #d6a84b;
+  --brass-hi: #e8c070;
+  --brass-deep: #9c7428;
+  --brass-glow: rgba(214, 168, 75, .42);
+  --cinnabar: #c9452f;
+  --cinnabar-hi: #ec7f69;
+  --cinnabar-deep: #8f2c1d;
+  --teal: #2f6e74;
+  --plum: #6c3b5c;
+  --iron: #34302c;
+  --stone: #a7ada3;
+  --stone-deep: #6f776f;
+  --brick: #a8492f;
+  --orb: #263a5c;
+  --orb-deep: #10182a;
+  --orb-glow: #5476ad;
+  --chalk: #e9efe8;
+  --chalk-dim: rgba(233, 239, 232, .7);
+  --chalk-faint: rgba(233, 239, 232, .17);
+  --shade: rgba(0, 0, 0, .2);
+
+  --font-display: "Gloock", "Georgia", "Times New Roman", serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "DM Mono", "Cascadia Mono", "Consolas", ui-monospace, monospace;
+
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--room);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .016) 0 2px, transparent 2px 9px),
+    radial-gradient(120% 70% at 50% 0%, var(--rail-deep), var(--room));
+  background-attachment: fixed;
+  color: var(--chalk);
+  font: 400 15px/1.5 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 28px;
+}
+[hidden] { display: none !important; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ivory); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+
+.label {
+  font: 500 11px/1.2 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.app { max-width: 1260px; margin-inline: auto; display: grid; gap: 26px; }
+
+/* ---------- top bar ---------- */
+.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark { width: 46px; height: 46px; flex: none; }
+.bm-rim { fill: var(--brass-deep); }
+.bm-face { fill: var(--brass); }
+.bm-mill { fill: none; stroke: var(--ink); stroke-opacity: .35; stroke-width: 2; stroke-dasharray: 1.4 2.6; }
+.bm-t { fill: none; stroke: var(--ink); stroke-width: 3.6; stroke-linecap: round; }
+.wordmark { font: 400 36px/1 var(--font-display); color: var(--ivory); letter-spacing: -.01em; }
+.tagline { margin-top: 5px; }
+.top-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 8px 18px;
+  border-radius: 999px; border: 1px solid transparent;
+  font-weight: 600; font-size: 14px; line-height: 1.2; text-align: center;
+  transition: transform .12s, background-color .15s, border-color .15s, opacity .15s;
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--brass); color: var(--ink); box-shadow: inset 0 -3px 0 var(--brass-deep); }
+.btn-primary:hover:not(:disabled) { background: var(--brass-hi); }
+.btn-ghost { background: transparent; border-color: var(--chalk-faint); color: var(--chalk); }
+.btn-ghost:hover:not(:disabled) { border-color: var(--chalk-dim); }
+.btn-small { min-height: 32px; padding: 5px 13px; font-size: 13px; }
+.btn-ink { background: var(--ink); color: var(--ivory); }
+.btn-ink:hover:not(:disabled) { background: var(--iron); }
+.btn-line { background: transparent; color: var(--ink); border-color: var(--ink-dim); }
+.btn-line:hover:not(:disabled) { border-color: var(--ink); }
+.count-badge { font: 500 12px/1 var(--font-mono); background: var(--brass); color: var(--ink); border-radius: 999px; padding: 3px 7px; }
+.link-btn { background: none; border: 0; padding: 4px 2px; color: var(--chalk-dim); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn:hover { color: var(--chalk); }
+
+/* ---------- table ---------- */
+.table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-radius: 30px;
+  margin-block: 8px;
+  background: var(--noise), radial-gradient(130% 100% at 65% 22%, var(--felt-hi) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+  box-shadow:
+    0 0 0 9px var(--rail),
+    0 0 0 10px rgba(214, 168, 75, .4),
+    0 26px 50px rgba(0, 0, 0, .55),
+    inset 0 0 90px rgba(0, 0, 0, .35);
+}
+.rack { padding: 24px 22px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px dashed var(--chalk-faint); min-width: 0; }
+.play { padding: 22px clamp(16px, 3vw, 34px) 30px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (min-width: 940px) {
+  .table { grid-template-columns: minmax(270px, 318px) minmax(0, 1fr); }
+  .rack { border-bottom: 0; border-right: 1px dashed var(--chalk-faint); }
+}
+
+/* ---------- rack ---------- */
+.rack-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.opt-count { font: 500 12px/1 var(--font-mono); color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+.opt-count.full { color: var(--cinnabar-hi); }
+.question-input {
+  width: 100%;
+  background: var(--shade); border: 1px solid var(--chalk-faint); border-radius: 12px;
+  padding: 12px 14px;
+  font: 400 20px/1.25 var(--font-display); color: var(--ivory);
+}
+.question-input::placeholder { color: var(--chalk-dim); }
+.question-input:focus { outline: none; border-color: var(--brass); }
+.sample-note { font-size: 13px; color: var(--chalk-dim); margin-top: -6px; }
+.option-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.opt { display: grid; grid-template-columns: 26px minmax(0, 1fr) 32px; align-items: center; gap: 6px; border-radius: 9px; padding: 1px 2px 1px 8px; }
+.opt:hover, .opt:focus-within { background: var(--shade); }
+.opt-index { font: 500 12px/1 var(--font-mono); color: var(--brass); font-variant-numeric: tabular-nums; }
+.opt-input { width: 100%; min-width: 0; background: transparent; border: 0; border-bottom: 1px solid transparent; padding: 8px 2px; font-size: 15px; color: var(--chalk); }
+.opt-input:focus { outline: none; border-bottom-color: var(--brass); }
+.x-btn { width: 30px; height: 30px; border-radius: 50%; border: 0; background: transparent; color: var(--chalk-dim); font-size: 19px; line-height: 1; display: grid; place-items: center; }
+.x-btn:hover { background: rgba(201, 69, 47, .25); color: var(--ivory); }
+.add-form { display: flex; gap: 8px; }
+.field {
+  flex: 1; min-width: 0; width: 100%;
+  background: var(--shade); border: 1px dashed var(--chalk-faint); border-radius: 999px;
+  padding: 9px 16px; color: var(--chalk);
+}
+.field::placeholder { color: var(--chalk-dim); }
+.field:focus { outline: none; border-style: solid; border-color: var(--brass); }
+.rack-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.presets { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 1px dashed var(--chalk-faint); }
+.preset-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.preset { border: 1px solid var(--chalk-faint); background: transparent; color: var(--chalk-dim); border-radius: 999px; padding: 5px 12px; font-size: 13px; }
+.preset:hover { color: var(--chalk); border-color: var(--chalk-dim); }
+
+/* ---------- mode chips ---------- */
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px 4px; }
+.chip {
+  --chip: var(--cinnabar); --chip-fg: var(--ivory);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 6px 2px 4px; border: 0; border-radius: 12px; background: none;
+  color: var(--chalk-dim); font: 600 12.5px/1.2 var(--font-body); text-align: center;
+}
+.chip-disc {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--chip-fg);
+  background:
+    radial-gradient(circle closest-side, var(--chip) 0 64%, var(--ivory) 65% 68%, var(--chip) 69% 78%, transparent 79%),
+    repeating-conic-gradient(var(--chip) 0deg 30deg, var(--ivory) 30deg 45deg);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .35), 0 6px 12px rgba(0, 0, 0, .25);
+  transition: transform .18s, box-shadow .18s;
+}
+.chip-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chip-icon .dot { fill: currentColor; stroke: none; }
+.chip:hover .chip-disc { transform: translateY(-2px); }
+.chip[aria-pressed="true"] { color: var(--ivory); }
+.chip[aria-pressed="true"] .chip-disc {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 3px var(--felt-deep), 0 0 0 5px var(--brass), 0 10px 18px rgba(0, 0, 0, .35);
+}
+
+/* ---------- stage ---------- */
+.stage-head { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; border-top: 1px dashed var(--chalk-faint); padding-top: 20px; }
+.stage-title { font: 400 clamp(26px, 3.2vw, 34px)/1.1 var(--font-display); color: var(--ivory); text-wrap: balance; }
+.stage-blurb { color: var(--chalk-dim); max-width: 62ch; }
+.stage { min-height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+.stage-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.stage-hint { font-size: 13px; color: var(--chalk-dim); text-align: center; max-width: 56ch; }
+.empty { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 40ch; }
+.empty-title { font: 400 24px/1.2 var(--font-display); color: var(--ivory); text-wrap: balance; }
+.empty-body { color: var(--chalk-dim); }
+
+/* ---------- result slip ---------- */
+.slip {
+  position: relative;
+  background: var(--ivory); color: var(--ink);
+  border-radius: 6px;
+  padding: 18px 26px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 28px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .35);
+  -webkit-mask: radial-gradient(circle 8px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+                radial-gradient(circle 8px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle 8px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+                radial-gradient(circle 8px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+}
+.slip::before { content: ""; position: absolute; left: 14px; top: 10px; bottom: 10px; border-left: 2px dashed var(--ivory-deep); }
+.slip-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 260px; padding-left: 10px; }
+.slip-eyebrow { color: var(--cinnabar); }
+.slip-choice { font: 400 clamp(30px, 4.6vw, 46px)/1.05 var(--font-display); overflow-wrap: anywhere; text-wrap: balance; }
+.slip-note { color: var(--ink-dim); font-size: 14px; max-width: 58ch; }
+.slip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.slip.enter { animation: slip-in .45s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes slip-in { from { transform: translateY(16px) rotate(-.8deg); opacity: 0; } }
+
+/* ---------- wheel ---------- */
+.wheel-wrap { position: relative; width: min(100%, 430px); aspect-ratio: 1; }
+.wheel-canvas { display: block; width: 100%; height: 100%; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .4)); }
+.wheel-pointer { position: absolute; left: 50%; top: -14px; width: 32px; height: 44px; margin-left: -16px; z-index: 2; transform-origin: 50% 32%; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .4)); }
+.wheel-pointer svg { display: block; width: 100%; height: 100%; }
+.ptr-body { fill: var(--cinnabar); stroke: var(--ivory); stroke-width: 2; }
+.ptr-dot { fill: var(--ivory); }
+.wheel-hub {
+  position: absolute; left: 50%; top: 50%; width: 25%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%; border: 0;
+  background: radial-gradient(circle at 38% 32%, var(--brass-hi), var(--brass) 52%, var(--brass-deep));
+  color: var(--ink); font: 400 clamp(16px, 2.4vw, 22px)/1 var(--font-display);
+  box-shadow: 0 0 0 5px var(--ink), 0 6px 14px rgba(0, 0, 0, .45);
+}
+.wheel-hub:hover:not(:disabled) { filter: brightness(1.07); }
+.wheel-hub:disabled { cursor: progress; }
+
+/* ---------- cards ---------- */
+.card-table { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 14px; width: min(100%, 760px); min-height: 280px; }
+.pcard {
+  position: relative; width: var(--card-w, 120px); aspect-ratio: 5 / 7;
+  padding: 0; border: 0; background: none; border-radius: 10px;
+  perspective: 900px;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1), translate .2s, opacity .3s;
+}
+.pcard:not(.flipped):hover { translate: 0 -6px; }
+.pcard-inner { position: absolute; inset: 0; display: block; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); }
+.pcard.flipped .pcard-inner { transform: rotateY(180deg); }
+.pcard-back, .pcard-face { position: absolute; inset: 0; border-radius: 10px; -webkit-backface-visibility: hidden; backface-visibility: hidden; box-shadow: 0 8px 16px rgba(0, 0, 0, .35); }
+.pcard-back {
+  border: 5px solid var(--ivory);
+  background:
+    repeating-linear-gradient(45deg, rgba(242, 233, 212, .24) 0 2px, transparent 2px 11px),
+    repeating-linear-gradient(-45deg, rgba(242, 233, 212, .24) 0 2px, transparent 2px 11px),
+    radial-gradient(circle at 50% 50%, var(--cinnabar), var(--cinnabar-deep));
+}
+.pcard-back::after { content: ""; position: absolute; inset: 7px; border: 1px solid rgba(242, 233, 212, .5); border-radius: 4px; }
+.pcard-face {
+  transform: rotateY(180deg);
+  background: var(--ivory); color: var(--ink);
+  display: grid; place-items: center; padding: 22% 10%;
+}
+.pcard-face.red { color: var(--cinnabar); }
+.pcard-name { font: 400 calc(var(--card-w, 120px) * .145)/1.12 var(--font-display); color: var(--ink); text-align: center; overflow-wrap: anywhere; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.pip { position: absolute; display: flex; flex-direction: column; align-items: center; font: 500 calc(var(--card-w, 120px) * .12)/1 var(--font-body); }
+.pip b { font: 400 calc(var(--card-w, 120px) * .15)/1 var(--font-display); }
+.pip-tl { top: 7%; left: 8%; }
+.pip-br { bottom: 7%; right: 8%; transform: rotate(180deg); }
+.pcard.chosen { z-index: 2; }
+.pcard.chosen .pcard-face { box-shadow: 0 0 0 4px var(--brass), 0 14px 28px rgba(0, 0, 0, .45); }
+.pcard.other { opacity: .62; }
+
+/* ---------- coin ---------- */
+.pair { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 10px 14px; }
+.pair-field { display: flex; flex-direction: column; gap: 6px; }
+.select {
+  background: var(--shade); border: 1px solid var(--chalk-faint); color: var(--chalk);
+  border-radius: 10px; padding: 8px 12px; min-width: 150px; max-width: 230px;
+}
+.select:focus { outline: none; border-color: var(--brass); }
+.select option { background: var(--felt-deep); color: var(--chalk); }
+.pair-vs { font: 400 18px/1 var(--font-display); color: var(--chalk-dim); padding-bottom: 10px; }
+.coin-scene { position: relative; height: 300px; width: 100%; display: grid; place-items: center; perspective: 900px; }
+.coin { position: relative; width: 190px; height: 190px; transform-style: preserve-3d; z-index: 1; }
+.coin-edge { position: absolute; inset: 0; border-radius: 50%; background: var(--brass-deep); }
+.coin-face {
+  position: absolute; inset: 0; border-radius: 50%;
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 34px; text-align: center; color: var(--ink);
+  background: radial-gradient(circle at 34% 28%, var(--brass-hi), var(--brass) 48%, var(--brass-deep) 100%);
+  box-shadow: inset 0 0 0 7px var(--brass-deep), inset 0 0 0 9px var(--brass-hi), inset 0 0 0 11px var(--brass-deep);
+}
+.coin-face.heads { transform: translateZ(4px); }
+.coin-face.tails { transform: rotateX(180deg) translateZ(4px); }
+.coin-face::before { content: ""; position: absolute; inset: 16px; border-radius: 50%; border: 1.5px dashed rgba(34, 29, 24, .35); }
+.coin-side { font: 500 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); }
+.coin-name { font: 400 22px/1.1 var(--font-display); overflow-wrap: anywhere; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.coin-shadow { position: absolute; bottom: 30px; left: 50%; width: 170px; height: 22px; margin-left: -85px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent); opacity: .5; }
+
+/* ---------- pegboard ---------- */
+.peg-wrap { width: min(100%, 560px); }
+.peg-canvas { display: block; width: 100%; cursor: crosshair; border-radius: 16px; touch-action: manipulation; }
+
+/* ---------- head to head ---------- */
+.duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; width: min(100%, 700px); }
+.contender {
+  position: relative; min-height: 190px; padding: 30px 20px 22px;
+  border: 0; border-radius: 16px;
+  background: var(--ivory); color: var(--ink);
+  font: 400 clamp(22px, 3vw, 32px)/1.15 var(--font-display);
+  overflow-wrap: anywhere; text-wrap: balance;
+  box-shadow: 0 6px 0 var(--ivory-deep), 0 16px 26px rgba(0, 0, 0, .35);
+  transition: transform .22s cubic-bezier(.2, .9, .3, 1.3), opacity .3s, box-shadow .2s;
+}
+.contender:hover:not(.lost) { transform: translateY(-4px) rotate(-1deg); }
+.contender + .vs + .contender:hover:not(.lost) { transform: translateY(-4px) rotate(1deg); }
+.contender-key { position: absolute; top: 12px; left: 0; right: 0; font: 500 11px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+.contender.won { transform: scale(1.05); box-shadow: 0 0 0 4px var(--brass), 0 16px 26px rgba(0, 0, 0, .35); }
+.contender.lost { opacity: .22; transform: scale(.93); }
+.vs {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--cinnabar); color: var(--ivory);
+  font: 400 19px/1 var(--font-display);
+  box-shadow: 0 0 0 4px var(--felt-deep), 0 0 0 6px var(--cinnabar);
+}
+.champion {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 26px 40px; border-radius: 18px;
+  background: var(--ivory); color: var(--ink); text-align: center;
+  box-shadow: 0 0 0 4px var(--brass), 0 18px 30px rgba(0, 0, 0, .35);
+}
+.champion-name { font: 400 clamp(28px, 4vw, 40px)/1.1 var(--font-display); overflow-wrap: anywhere; }
+.champion .label { color: var(--cinnabar); }
+.bracket { display: flex; flex-direction: column; gap: 8px; width: min(100%, 700px); }
+.bracket-round { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bracket-round .label { width: 70px; flex: none; color: var(--chalk-dim); }
+.bout { font-size: 12.5px; border: 1px solid var(--chalk-faint); border-radius: 999px; padding: 3px 10px; color: var(--chalk-dim); max-width: 100%; overflow-wrap: anywhere; }
+.bout b { color: var(--brass-hi); font-weight: 600; }
+.bout s { opacity: .65; }
+.bout.live { border-color: var(--brass); color: var(--chalk); }
+.bout.bye { border-style: dashed; }
+@media (max-width: 560px) {
+  .duel { grid-template-columns: minmax(0, 1fr); }
+  .vs { justify-self: center; }
+  .contender { min-height: 120px; }
+}
+
+/* ---------- knockout ---------- */
+.ko-grid { --cols: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(max(130px, calc((100% - (var(--cols) - 1) * 12px) / var(--cols) - 1px)), 1fr)); gap: 16px 12px; width: min(100%, 720px); }
+.ko-tile {
+  position: relative; min-height: 86px; padding: 16px 12px;
+  border-radius: 12px; border: 1px solid rgba(242, 233, 212, .25);
+  background: var(--shade); color: var(--chalk);
+  font: 600 15px/1.25 var(--font-body); text-align: center; overflow-wrap: anywhere;
+  cursor: default;
+  transition: background-color .12s, border-color .12s, transform .2s;
+}
+.ko-name { transition: opacity .25s; }
+.ko-tile.spot { background: rgba(214, 168, 75, .24); border-color: var(--brass); transform: scale(1.04); }
+.ko-tile.out .ko-name { opacity: .5; text-decoration: line-through; }
+.ko-tile.out::after {
+  content: "Out";
+  position: absolute; left: 10px; top: -12px;
+  transform: rotate(-8deg);
+  padding: 3px 9px; border: 2px solid var(--cinnabar); border-radius: 5px;
+  background: var(--felt-deep);
+  font: 400 16px/1 var(--font-display); letter-spacing: .04em; color: var(--cinnabar-hi);
+  animation: stamp .3s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+.ko-tile.can-rescue { cursor: pointer; }
+.ko-tile.can-rescue:hover { border-color: var(--chalk-dim); }
+.ko-tile.can-rescue:hover::after { content: "Rescue"; color: var(--chalk); border-color: var(--chalk); animation: none; }
+.ko-tile.winner { background: var(--ivory); color: var(--ink); border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass), 0 12px 22px rgba(0, 0, 0, .35); transform: scale(1.05); }
+.ko-tag { position: absolute; top: -9px; right: 10px; font: 500 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; background: var(--brass); color: var(--ink); padding: 4px 7px; border-radius: 999px; }
+@keyframes stamp { from { transform: rotate(-8deg) scale(2.4); opacity: 0; } }
+
+/* ---------- scale ---------- */
+.scale-svg { display: block; width: min(100%, 620px); height: auto; overflow: visible; }
+.sc-brass { fill: var(--brass); }
+.sc-brass-deep { fill: var(--brass-deep); }
+.sc-brass-hi { fill: var(--brass-hi); }
+.sc-pivot { fill: var(--brass-hi); stroke: var(--ink); stroke-width: 3; }
+.sc-string { stroke: var(--ivory); stroke-opacity: .7; stroke-width: 1.5; }
+.sc-bowl { fill: var(--brass); stroke: var(--brass-deep); stroke-width: 2; }
+.sc-name { fill: var(--ivory); font: 400 20px var(--font-display); text-anchor: middle; }
+.sc-total { fill: var(--brass-hi); font: 500 12px var(--font-mono); letter-spacing: .12em; text-anchor: middle; }
+.tk-feather { fill: var(--ivory); }
+.tk-quill { fill: none; stroke: var(--brass-deep); stroke-width: 1.4; }
+.tk-stone { fill: var(--stone); }
+.tk-brick { fill: var(--brick); }
+.tk-mortar { fill: none; stroke: var(--ivory-deep); stroke-opacity: .6; stroke-width: 1; }
+.tk-boulder { fill: var(--stone-deep); }
+.tk-anvil { fill: var(--iron); stroke: var(--ivory-deep); stroke-width: .8; }
+.scale-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: min(100%, 700px); }
+.side { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px; border-radius: 14px; border: 1px solid var(--chalk-faint); background: var(--shade); }
+.side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.side-name { font: 400 19px/1.2 var(--font-display); color: var(--ivory); overflow-wrap: anywhere; min-width: 0; }
+.side-total { font: 500 12px/1 var(--font-mono); color: var(--brass-hi); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.side-empty { font-size: 13px; color: var(--chalk-dim); }
+.reason-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.reason { display: grid; grid-template-columns: minmax(0, 1fr) auto 30px; align-items: center; gap: 8px; font-size: 14px; }
+.reason-text { overflow-wrap: anywhere; }
+.reason-w { font: 500 11px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--brass); white-space: nowrap; }
+.reason-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.reason-form .field { grid-column: 1 / -1; border-radius: 10px; }
+.reason-form .select { min-width: 0; padding-block: 6px; }
+@media (max-width: 620px) { .scale-cols { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- oracle ---------- */
+.oracle-q { font: 400 22px/1.25 var(--font-display); color: var(--ivory); text-align: center; max-width: 34ch; text-wrap: balance; overflow-wrap: anywhere; }
+.oracle-q.muted { color: var(--chalk-dim); font: 400 15px/1.4 var(--font-body); }
+.orb-scene { display: flex; flex-direction: column; align-items: center; }
+.orb {
+  position: relative; overflow: hidden; isolation: isolate;
+  width: min(68vw, 270px); aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-items: center; padding: 18%; text-align: center;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .5), transparent 20%),
+    radial-gradient(circle at 50% 58%, var(--orb-glow), var(--orb) 58%, var(--orb-deep));
+  box-shadow: inset 0 -22px 40px rgba(0, 0, 0, .5), 0 0 60px rgba(84, 118, 173, .3);
+}
+.orb::before {
+  content: ""; position: absolute; inset: -30%; z-index: -1;
+  background: conic-gradient(from 0deg, transparent, rgba(242, 233, 212, .22), transparent 30%, rgba(108, 59, 92, .55), transparent 60%, rgba(47, 110, 116, .55), transparent);
+  filter: blur(18px);
+  animation: swirl 14s linear infinite;
+}
+.orb.churn::before { animation-duration: 1.1s; }
+.orb-text { font: 400 clamp(17px, 2.4vw, 22px)/1.2 var(--font-display); color: var(--ivory); text-shadow: 0 2px 12px rgba(0, 0, 0, .7); text-wrap: balance; opacity: 0; transform: scale(.9); transition: opacity .6s, transform .6s; }
+.orb-text.show { opacity: 1; transform: none; }
+.orb-stand { width: 150px; height: 34px; margin-top: -12px; background: linear-gradient(var(--brass), var(--brass-deep)); clip-path: polygon(16% 0, 84% 0, 100% 100%, 0 100%); border-radius: 4px; }
+@keyframes swirl { to { transform: rotate(1turn); } }
+
+/* ---------- ledger ---------- */
+.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(0, 0, 0, .5); }
+.ledger {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
+  width: min(390px, 100%); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+  padding: calc(22px + env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) 22px;
+  background: var(--rail-deep); border-left: 1px solid rgba(214, 168, 75, .35);
+  box-shadow: -20px 0 40px rgba(0, 0, 0, .45);
+}
+.ledger-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ledger-title { font: 400 28px/1.1 var(--font-display); color: var(--ivory); }
+.ledger-sub { color: var(--chalk-dim); font-size: 13px; margin-top: -8px; }
+.ledger-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.entry { display: flex; flex-direction: column; gap: 3px; padding: 12px 0; border-bottom: 1px dashed var(--chalk-faint); }
+.entry-top { display: flex; justify-content: space-between; gap: 10px; }
+.entry-time { font: 400 12px/1.2 var(--font-mono); color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+.entry-q { font-size: 13px; color: var(--chalk-dim); overflow-wrap: anywhere; }
+.entry-choice { font: 400 21px/1.2 var(--font-display); color: var(--ivory); overflow-wrap: anywhere; }
+.entry-note { font-size: 13px; color: var(--chalk-dim); }
+.ledger-empty { color: var(--chalk-dim); }
+
+.foot { text-align: center; font-size: 12.5px; color: var(--chalk-dim); }
+.foot kbd { font: 500 11px/1 var(--font-mono); border: 1px solid var(--chalk-faint); border-radius: 5px; padding: 2px 6px; }
+
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+        <circle class="bm-rim" cx="22" cy="22" r="21"></circle>
+        <circle class="bm-face" cx="22" cy="22" r="16.5"></circle>
+        <circle class="bm-mill" cx="22" cy="22" r="18.8"></circle>
+        <path class="bm-t" d="M14.5 15.5h15M22 15.5v15"></path>
+      </svg>
+      <div>
+        <h1 class="wordmark">Toss-Up</h1>
+        <p class="label tagline">Hard choices, settled at the table</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost btn-small" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+      <button class="btn btn-ghost btn-small" id="ledgerBtn" type="button" aria-controls="ledger">The ledger <span class="count-badge" id="ledgerCount">0</span></button>
+    </div>
+  </header>
+
+  <main class="table">
+    <section class="rack" aria-label="Your decision">
+      <label class="label" for="question">The question</label>
+      <input class="question-input" id="question" type="text" maxlength="120" autocomplete="off" placeholder="What are you deciding?">
+      <p class="sample-note" id="sampleNote">These are sample options. Type over them, or load a set below.</p>
+
+      <div class="rack-head">
+        <h2 class="label">Options</h2>
+        <span class="opt-count" id="optCount">0 / 16</span>
+      </div>
+      <ol class="option-list" id="optionList"></ol>
+      <form class="add-form" id="addForm">
+        <input class="field" id="newOption" type="text" maxlength="40" autocomplete="off" placeholder="Add an option" aria-label="New option">
+        <button class="btn btn-primary btn-small" type="submit">Add</button>
+      </form>
+      <div class="rack-tools">
+        <button class="btn btn-ghost btn-small" id="shuffleBtn" type="button">Shuffle order</button>
+        <button class="btn btn-ghost btn-small" id="clearBtn" type="button">Clear all</button>
+      </div>
+      <div class="presets">
+        <span class="label">Load a set</span>
+        <div class="preset-row" id="presetRow"></div>
+      </div>
+    </section>
+
+    <section class="play" aria-label="Decide">
+      <nav class="chips" id="chips" aria-label="Ways to decide"></nav>
+      <header class="stage-head">
+        <h2 class="stage-title" id="modeTitle">Spin the wheel</h2>
+        <p class="stage-blurb" id="modeBlurb"></p>
+      </header>
+      <div class="stage" id="stage"></div>
+      <div class="slip" id="slip" hidden>
+        <div class="slip-body" aria-live="polite">
+          <p class="label slip-eyebrow" id="slipEyebrow"></p>
+          <p class="slip-choice" id="slipChoice"></p>
+          <p class="slip-note" id="slipNote"></p>
+        </div>
+        <div class="slip-actions" id="slipActions"></div>
+      </div>
+    </section>
+  </main>
+
+  <p class="foot">Press <kbd>Space</kbd> to play the current game. Your options and the ledger are saved on this device.</p>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="ledger" id="ledger" hidden aria-labelledby="ledgerTitle">
+  <div class="ledger-head">
+    <h2 class="ledger-title" id="ledgerTitle">The ledger</h2>
+    <button class="btn btn-ghost btn-small" id="ledgerClose" type="button">Close</button>
+  </div>
+  <p class="ledger-sub">Every decision this table has made, newest first.</p>
+  <ol class="ledger-list" id="ledgerList"></ol>
+  <p class="ledger-empty" id="ledgerEmpty">Nothing decided yet. Every result lands here.</p>
+  <div><button class="btn btn-ghost btn-small" id="ledgerClear" type="button">Clear the ledger</button></div>
+</aside>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<noscript><p style="text-align:center">Toss-Up needs JavaScript turned on.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= basics ================= */
+const MAX_OPTIONS = 16;
+const MAX_LEN = 40;
+const STORE_KEY = 'tossup.v1';
+const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const FONT_BODY = 'Figtree, "Segoe UI", system-ui, sans-serif';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const $ = (s, r = document) => r.querySelector(s);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mod = (a, n) => ((a % n) + n) % n;
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'style') n.style.cssText = v;
+    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : String(kid));
+  return n;
+}
+function svg(markup) { const t = document.createElement('template'); t.innerHTML = markup.trim(); return t.content.firstElementChild; }
+
+// Fair randomness: crypto-backed where it decides an outcome.
+const buf32 = new Uint32Array(1);
+function rand() { if (window.crypto && crypto.getRandomValues) { crypto.getRandomValues(buf32); return buf32[0] / 4294967296; } return Math.random(); }
+const randInt = n => Math.floor(rand() * n);
+const pickOne = arr => arr[randInt(arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function listJoin(items) {
+  try { return new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(items); }
+  catch { return items.join(', '); }
+}
+function fitText(c, text, maxW) {
+  if (c.measureText(text).width <= maxW) return text;
+  let s = text;
+  while (s.length > 1 && c.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+  return s.trimEnd() + '…';
+}
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  if (c.roundRect) c.roundRect(x, y, w, h, r);
+  else c.rect(x, y, w, h);
+}
+const isTyping = e => !!(e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable]'));
+
+const rootStyle = getComputedStyle(document.documentElement);
+const T = {};
+['ivory', 'ivory-deep', 'ink', 'brass', 'brass-hi', 'brass-deep', 'brass-glow', 'cinnabar', 'cinnabar-hi', 'teal', 'plum', 'iron', 'chalk', 'chalk-dim', 'chalk-faint', 'felt-deep']
+  .forEach(k => { T[k.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = rootStyle.getPropertyValue('--' + k).trim(); });
+
+/* ================= content ================= */
+const PRESETS = [
+  { label: 'Dinner', question: "What's for dinner tonight?", options: ['Tacos', 'Ramen', 'Homemade pasta', 'Pizza', 'Curry', 'Leftovers'] },
+  { label: 'Weekend', question: 'What should I do this weekend?', options: ['Go hiking', 'Game marathon', 'See friends', 'Fix up my room', 'Day trip', 'Absolutely nothing'] },
+  { label: 'Game night', question: 'Which game tonight?', options: ['Co-op campaign', 'Racing sim', 'Card game', 'Something from the backlog', 'Retro classics'] },
+  { label: 'Movie night', question: 'What kind of movie?', options: ['Comedy', 'Horror', 'Sci-fi', 'Animated', 'Documentary', 'Action'] },
+  { label: 'Yes or no', question: 'Should I do it?', options: ['Yes', 'No'] },
+  { label: 'Who goes first', question: 'Who goes first?', options: ['Player 1', 'Player 2', 'Player 3', 'Player 4'] },
+];
+
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const SUITS = [{ s: '♠', red: false }, { s: '♥', red: true }, { s: '♣', red: false }, { s: '♦', red: true }];
+
+const WEIGHTS = {
+  1: { name: 'Feather', w: 26, svg: '<path class="tk-feather" d="M-12 0 C-8 -9 2 -15 13 -16 C9 -8 1 -2 -12 0 Z"/><path class="tk-quill" d="M-13 1 L5 -9"/>' },
+  2: { name: 'Pebble', w: 22, svg: '<ellipse class="tk-stone" cx="0" cy="-6" rx="11" ry="6"/>' },
+  3: { name: 'Brick', w: 28, svg: '<rect class="tk-brick" x="-14" y="-13" width="28" height="13" rx="2"/><path class="tk-mortar" d="M-14 -6.5 H14 M-4 -13 V-6.5 M6 -6.5 V0"/>' },
+  4: { name: 'Boulder', w: 30, svg: '<path class="tk-boulder" d="M-15 0 C-17 -10 -10 -22 1 -23 C11 -23 16 -14 15 -6 C15 -2 13 0 10 0 Z"/>' },
+  5: { name: 'Anvil', w: 46, svg: '<path class="tk-anvil" d="M-20 -24 H14 C20 -24 24 -21 25 -18 H10 V-13 H6 V-6 H12 V0 H-12 V-6 H-6 V-13 H-20 Z"/>' },
+};
+
+const ORACLE = {
+  yes: ['Yes. Go.', 'Do it before you talk yourself out of it.', 'The signs are good.', "Yes, and don't look back.", 'Absolutely.', 'Yes. You already knew that.', 'Go for it, carefully.', "Yes. Tell someone so you can't back out."],
+  no: ['No. Sleep on it.', 'Not this time.', 'Hard pass.', 'The timing is wrong.', 'No. Put it down and walk away.', 'Not like this.', "No, and that's a relief, isn't it?"],
+  maybe: ['Too foggy to say. Ask after a snack.', 'Half yes, half no. Flip a coin and watch your face.', 'Ask a sharper question.', "Wait a day. It'll be obvious."],
+  again: ["You already asked. Didn't like the answer?", 'Same question, same oracle. What were you hoping for?', 'Asking twice is an answer in itself.'],
+};
+
+/* ================= state ================= */
+const state = {
+  question: PRESETS[0].question,
+  options: PRESETS[0].options.slice(),
+  mode: 'wheel',
+  sample: true,
+  muted: false,
+  pairs: { coin: [], scale: [] },
+  reasons: Object.assign(Object.create(null), {
+    Tacos: [{ t: 'Quick to make', w: 2 }, { t: 'Everyone likes them', w: 3 }],
+    Ramen: [{ t: "It's cold out", w: 4 }],
+  }),
+  history: [],
+};
+
+function load(validModes) {
+  let d;
+  try { d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch { d = null; }
+  if (!d || typeof d !== 'object') return;
+  if (typeof d.question === 'string') state.question = d.question.slice(0, 120);
+  if (Array.isArray(d.options)) state.options = d.options.filter(o => typeof o === 'string').map(o => o.slice(0, MAX_LEN)).slice(0, MAX_OPTIONS);
+  if (validModes.includes(d.mode)) state.mode = d.mode;
+  state.sample = !!d.sample;
+  state.muted = !!d.muted;
+  if (d.pairs && typeof d.pairs === 'object') {
+    for (const k of ['coin', 'scale']) if (Array.isArray(d.pairs[k])) state.pairs[k] = d.pairs[k].filter(s => typeof s === 'string').slice(0, 2);
+  }
+  if (d.reasons && typeof d.reasons === 'object') {
+    state.reasons = Object.create(null);
+    for (const [k, v] of Object.entries(d.reasons)) {
+      if (!Array.isArray(v)) continue;
+      state.reasons[k] = v.filter(r => r && typeof r.t === 'string' && Number.isFinite(r.w))
+        .map(r => ({ t: r.t.slice(0, 60), w: clamp(Math.round(r.w), 1, 5) })).slice(0, 24);
+    }
+  }
+  if (Array.isArray(d.history)) {
+    state.history = d.history.filter(h => h && typeof h.choice === 'string' && Number.isFinite(h.t))
+      .map(h => ({ q: String(h.q || ''), choice: h.choice, mode: String(h.mode || ''), note: String(h.note || ''), t: h.t })).slice(0, 60);
+  }
+}
+let saveTimer = 0;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* storage unavailable: keep working in memory */ } }, 150);
+}
+
+const getOptions = () => state.options.map(s => s.trim()).filter(Boolean);
+function getPair(kind) {
+  const opts = getOptions();
+  let [a, b] = state.pairs[kind] || [];
+  if (!opts.includes(a)) a = opts.find(o => o !== b) ?? opts[0];
+  if (!opts.includes(b) || b === a) b = opts.find(o => o !== a) ?? opts[1];
+  state.pairs[kind] = [a, b];
+  return [a, b];
+}
+function reasonsFor(name) { return state.reasons[name] || (state.reasons[name] = []); }
+const weightOf = name => reasonsFor(name).reduce((s, r) => s + r.w, 0);
+
+/* ================= sound ================= */
+const sound = (() => {
+  let ctx = null;
+  function ac() {
+    if (state.muted) return null;
+    if (!ctx) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      try { ctx = new C(); } catch { return null; }
+    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+  function tone(freq, dur, { type = 'sine', gain = .15, slideTo = 0, delay = 0 } = {}) {
+    const c = ac(); if (!c) return;
+    const t = c.currentTime + delay;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + .005);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(c.destination);
+    o.start(t); o.stop(t + dur + .03);
+  }
+  function noise(dur, { gain = .2, freq = 1200, q = .8, type = 'bandpass', delay = 0 } = {}) {
+    const c = ac(); if (!c) return;
+    const t = c.currentTime + delay;
+    const len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    const src = c.createBufferSource(); src.buffer = b;
+    const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = c.createGain(); g.gain.value = gain;
+    src.connect(f).connect(g).connect(c.destination);
+    src.start(t);
+  }
+  let lastPeg = 0;
+  return {
+    tick: () => tone(2300, .03, { type: 'square', gain: .035 }),
+    peg: () => { const n = performance.now(); if (n - lastPeg < 40) return; lastPeg = n; tone(1300 + Math.random() * 900, .05, { type: 'triangle', gain: .05 }); },
+    flip: () => { for (let i = 0; i < 6; i++) noise(.05, { freq: 3200, gain: .07, delay: i * .07 }); },
+    thud: () => { tone(150, .2, { gain: .3, slideTo: 60 }); noise(.08, { freq: 500, gain: .12, type: 'lowpass' }); },
+    stamp: () => { tone(95, .22, { gain: .32, slideTo: 45 }); noise(.12, { freq: 900, gain: .22 }); },
+    card: () => noise(.09, { freq: 2600, gain: .12, q: .6 }),
+    whoosh: () => noise(.6, { freq: 800, gain: .1, q: .4 }),
+    soft: () => tone(560, .14, { gain: .06 }),
+    chime: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .55, { type: 'triangle', gain: .08, delay: i * .075 })),
+  };
+})();
+
+/* ================= confetti ================= */
+const confetti = (() => {
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  let parts = [], raf = 0, dpr = 1;
+  const colors = () => [T.brass, T.cinnabar, T.ivory, T.teal, T.brassHi];
+  function resize() { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+  function burst(x, y) {
+    if (reduceMotion) return;
+    resize();
+    const cs = colors();
+    for (let i = 0; i < 110; i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * 2.4, sp = 5 + Math.random() * 9;
+      parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: Math.random() * 6.3, vr: (Math.random() - .5) * .35, w: 5 + Math.random() * 6, h: 3 + Math.random() * 4, c: cs[i % cs.length], life: 0 });
+    }
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+  function step() {
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(p => p.y < innerHeight + 30 && p.life < 260);
+    for (const p of parts) {
+      p.life++; p.vy += .24; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+      cx.globalAlpha = Math.min(1, (260 - p.life) / 60);
+      cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 1.7)) + .5);
+      cx.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(step) : 0;
+    if (!raf) cx.clearRect(0, 0, innerWidth, innerHeight);
+  }
+  return { burst };
+})();
+
+/* ================= icons ================= */
+const ICONS = {
+  wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M12 14v7M3 12h7M14 12h7M5.6 5.6l5 5M13.4 13.4l5 5M18.4 5.6l-5 5M10.6 13.4l-5 5"/>',
+  cards: '<rect x="3.5" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 8.75 12.75)"/><rect x="10" y="3.5" width="10.5" height="14.5" rx="2" transform="rotate(9 15.25 10.75)"/>',
+  coin: '<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="5.4"/><path d="M12 9.6v4.8"/>',
+  pegs: '<circle class="dot" cx="6" cy="5" r="1.3"/><circle class="dot" cx="12" cy="5" r="1.3"/><circle class="dot" cx="18" cy="5" r="1.3"/><circle class="dot" cx="9" cy="10" r="1.3"/><circle class="dot" cx="15" cy="10" r="1.3"/><circle cx="12" cy="15.2" r="2.3"/><path d="M3 20.5h18M7.5 20.5v-2.5M12 20.5v-2.5M16.5 20.5v-2.5"/>',
+  duel: '<path d="M3.5 5.5l7 6.5-7 6.5M20.5 5.5l-7 6.5 7 6.5"/>',
+  knockout: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/>',
+  scale: '<path d="M12 3.5v16.5M8 20h8M4 7h16M4 7l-3 6.5h6zM20 7l-3 6.5h6z"/>',
+  oracle: '<circle cx="12" cy="10" r="7"/><path d="M8 20.5h8l-1.6-3.5H9.6z"/><path d="M8.8 8.6a3.4 3.4 0 0 1 3.2-2.4"/>',
+};
+const POINTER_SVG = '<svg viewBox="0 0 32 44"><path class="ptr-body" d="M16 42 L5 19 A12 12 0 1 1 27 19 Z"/><circle class="ptr-dot" cx="16" cy="14.5" r="4.5"/></svg>';
+
+/* ================= ui refs ================= */
+const ui = {
+  question: $('#question'), list: $('#optionList'), count: $('#optCount'), addForm: $('#addForm'), newOpt: $('#newOption'),
+  sampleNote: $('#sampleNote'), shuffleBtn: $('#shuffleBtn'), clearBtn: $('#clearBtn'), presetRow: $('#presetRow'),
+  chips: $('#chips'), modeTitle: $('#modeTitle'), modeBlurb: $('#modeBlurb'), stage: $('#stage'),
+  soundBtn: $('#soundBtn'), ledgerBtn: $('#ledgerBtn'), ledgerCount: $('#ledgerCount'),
+  ledger: $('#ledger'), scrim: $('#scrim'), ledgerList: $('#ledgerList'), ledgerEmpty: $('#ledgerEmpty'),
+  ledgerClose: $('#ledgerClose'), ledgerClear: $('#ledgerClear'),
+};
+const slip = { root: $('#slip'), eyebrow: $('#slipEyebrow'), choice: $('#slipChoice'), note: $('#slipNote'), actions: $('#slipActions') };
+
+/* ================= result slip + ledger ================= */
+function hideSlip() { slip.root.hidden = true; }
+
+function announce({ verb, choice, note = '', actions = [], again = 'Go again', log = true, celebrate = true }) {
+  let entry = null;
+  function paint(p) {
+    slip.eyebrow.textContent = p.verb;
+    slip.choice.textContent = p.choice;
+    slip.note.textContent = p.note || '';
+    slip.note.hidden = !p.note;
+    const btns = (p.actions || []).map(a => el('button', { class: `btn ${a.primary ? 'btn-ink' : 'btn-line'}`, type: 'button', onclick: a.onClick }, a.label));
+    if (again) btns.push(el('button', { class: 'btn btn-line', type: 'button', onclick: () => { hideSlip(); current && current.play && current.play(); } }, again));
+    slip.actions.replaceChildren(...btns);
+  }
+  paint({ verb, choice, note, actions });
+  slip.root.hidden = false;
+  slip.root.classList.remove('enter'); void slip.root.offsetWidth; slip.root.classList.add('enter');
+  if (log) entry = logDecision({ q: state.question.trim(), choice, mode: MODES[state.mode].title, note });
+  if (celebrate) sound.chime(); else sound.soft();
+  slip.root.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  if (celebrate) setTimeout(() => { const r = slip.choice.getBoundingClientRect(); confetti.burst(r.left + Math.min(r.width / 2, 160), r.top + r.height / 2); }, 120);
+  return {
+    update(p) {
+      paint(p);
+      if (entry) { entry.choice = p.choice; entry.note = p.note || ''; save(); renderLedger(); }
+    },
+  };
+}
+
+function logDecision(e) {
+  const entry = { ...e, t: Date.now() };
+  state.history.unshift(entry);
+  if (state.history.length > 60) state.history.length = 60;
+  save(); renderLedger();
+  return entry;
+}
+function fmtTime(t) {
+  const d = new Date(t), now = new Date(), mins = Math.round((now - d) / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return `Today ${hm}`;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + hm;
+}
+function renderLedger() {
+  ui.ledgerCount.textContent = String(state.history.length);
+  ui.ledgerEmpty.hidden = state.history.length > 0;
+  ui.ledgerClear.hidden = state.history.length === 0;
+  ui.ledgerList.replaceChildren(...state.history.map(h => el('li', { class: 'entry' },
+    el('div', { class: 'entry-top' }, el('span', { class: 'label' }, h.mode), el('time', { class: 'entry-time', datetime: new Date(h.t).toISOString() }, fmtTime(h.t))),
+    h.q ? el('p', { class: 'entry-q' }, h.q) : null,
+    el('p', { class: 'entry-choice' }, h.choice),
+    h.note ? el('p', { class: 'entry-note' }, h.note) : null)));
+}
+function openLedger() { renderLedger(); ui.ledger.hidden = false; ui.scrim.hidden = false; ui.ledgerClose.focus(); }
+function closeLedger() { ui.ledger.hidden = true; ui.scrim.hidden = true; ui.ledgerBtn.focus(); }
+
+// Two-step buttons instead of confirm dialogs.
+function armButton(btn, armedLabel, action) {
+  const label = btn.textContent;
+  let timer = 0;
+  btn.addEventListener('click', () => {
+    if (btn.dataset.armed) { clearTimeout(timer); delete btn.dataset.armed; btn.textContent = label; action(); return; }
+    btn.dataset.armed = '1'; btn.textContent = armedLabel;
+    timer = setTimeout(() => { delete btn.dataset.armed; btn.textContent = label; }, 3000);
+  });
+}
+
+/* ================= options rack ================= */
+function markEdited() { if (state.sample) { state.sample = false; ui.sampleNote.hidden = true; } }
+function updateCount() {
+  const n = state.options.length;
+  ui.count.textContent = `${n} / ${MAX_OPTIONS}`;
+  ui.count.classList.toggle('full', n >= MAX_OPTIONS);
+  ui.newOpt.disabled = n >= MAX_OPTIONS;
+  ui.newOpt.placeholder = n >= MAX_OPTIONS ? `That's the limit of ${MAX_OPTIONS}` : 'Add an option';
+}
+function optionRow(value, i) {
+  const input = el('input', { class: 'opt-input', id: `opt-${i}`, type: 'text', value, maxlength: MAX_LEN, autocomplete: 'off', 'aria-label': `Option ${i + 1}` });
+  input.addEventListener('input', () => { state.options[i] = input.value; markEdited(); optionsChanged(true); });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ui.newOpt.focus(); } });
+  const rm = el('button', { class: 'x-btn', type: 'button', 'aria-label': `Remove option ${i + 1}`, onclick: () => removeOption(i) }, '×');
+  return el('li', { class: 'opt' }, el('span', { class: 'opt-index', 'aria-hidden': 'true' }, String(i + 1).padStart(2, '0')), input, rm);
+}
+function renderRack() {
+  ui.question.value = state.question;
+  ui.list.replaceChildren(...state.options.map(optionRow));
+  ui.sampleNote.hidden = !state.sample;
+  updateCount();
+}
+function addOption(text) {
+  text = text.trim().slice(0, MAX_LEN);
+  if (!text || state.options.length >= MAX_OPTIONS) return false;
+  state.options.push(text); markEdited(); renderRack(); optionsChanged();
+  return true;
+}
+function removeOption(i) {
+  state.options.splice(i, 1); markEdited(); renderRack(); optionsChanged();
+  const next = $(`#opt-${Math.min(i, state.options.length - 1)}`);
+  (next || ui.newOpt).focus();
+}
+function loadPreset(p) {
+  state.question = p.question; state.options = p.options.slice(); state.sample = false;
+  hideSlip(); renderRack(); optionsChanged();
+}
+let optTimer = 0;
+function optionsChanged(typing = false) {
+  save(); updateCount();
+  clearTimeout(optTimer);
+  if (typing) optTimer = setTimeout(syncMode, 350); else syncMode();
+}
+
+/* ================= modes ================= */
+const MODES = {};
+const ORDER = ['wheel', 'cards', 'coin', 'pegs', 'duel', 'knockout', 'scale', 'oracle'];
+let current = null, showingEmpty = false, pendingSync = false;
+
+function mount() {
+  if (current && current.unmount) current.unmount();
+  current = null;
+  ui.stage.replaceChildren();
+  const def = MODES[state.mode];
+  ui.modeTitle.textContent = def.title;
+  ui.modeBlurb.textContent = def.blurb;
+  const enough = getOptions().length >= def.min;
+  showingEmpty = !enough;
+  if (!enough) { ui.stage.append(emptyPanel(def)); return; }
+  current = def.create(ui.stage);
+}
+function syncMode() {
+  if (current && current.busy && current.busy()) { pendingSync = true; return; }
+  const def = MODES[state.mode];
+  const enough = getOptions().length >= def.min;
+  if (showingEmpty === enough) mount();
+  else if (current && current.refresh) current.refresh();
+}
+function modeIdle() { if (pendingSync) { pendingSync = false; syncMode(); } }
+function setMode(id) {
+  if (id === state.mode && current) return;
+  hideSlip();
+  state.mode = id; save();
+  renderChips(); mount();
+}
+function emptyPanel(def) {
+  return el('div', { class: 'empty' },
+    el('p', { class: 'empty-title' }, `${def.title} needs at least ${def.min} options.`),
+    el('p', { class: 'empty-body' }, 'Add them in the options list, or load a ready-made set.'),
+    el('button', { class: 'btn btn-primary', type: 'button', onclick: () => loadPreset(PRESETS[0]) }, 'Load the dinner set'));
+}
+function renderChips() {
+  ui.chips.replaceChildren(...ORDER.map(id => {
+    const m = MODES[id];
+    const disc = el('span', { class: 'chip-disc', 'aria-hidden': 'true' });
+    disc.append(svg(`<svg class="chip-icon" viewBox="0 0 24 24">${ICONS[id]}</svg>`));
+    return el('button', { class: 'chip', type: 'button', 'aria-pressed': String(id === state.mode), style: `--chip: var(${m.color}); --chip-fg: var(${m.fg})`, onclick: () => setMode(id) }, disc, el('span', {}, m.chip));
+  }));
+}
+const bar = (...kids) => el('div', { class: 'stage-bar' }, ...kids);
+const hint = text => el('p', { class: 'stage-hint' }, text);
+
+/* Picks two options for the coin and the scale. */
+function pairPicker(kind, labels, onChange) {
+  const sels = [0, 1].map(k => el('select', { class: 'select', id: `${kind}-pick-${k}` }));
+  const root = el('div', { class: 'pair' },
+    el('label', { class: 'pair-field' }, el('span', { class: 'label' }, labels[0]), sels[0]),
+    el('span', { class: 'pair-vs', 'aria-hidden': 'true' }, 'or'),
+    el('label', { class: 'pair-field' }, el('span', { class: 'label' }, labels[1]), sels[1]));
+  sels.forEach((sel, k) => sel.addEventListener('change', () => {
+    const pair = getPair(kind).slice(), prev = pair[k];
+    pair[k] = sel.value;
+    if (pair[0] === pair[1]) pair[1 - k] = prev;
+    state.pairs[kind] = pair; save(); fill(); hideSlip();
+    if (onChange) onChange();
+  }));
+  function fill() {
+    const opts = [...new Set(getOptions())], pair = getPair(kind);
+    sels.forEach((sel, k) => { sel.replaceChildren(...opts.map(o => el('option', { value: o }, o))); sel.value = pair[k]; });
+  }
+  fill();
+  return { root, fill, disable: d => sels.forEach(s => { s.disabled = d; }) };
+}
+
+/* ---------- 1. wheel ---------- */
+MODES.wheel = {
+  title: 'Spin the wheel', chip: 'Wheel', min: 2, color: '--cinnabar', fg: '--ivory',
+  blurb: 'Every option gets an equal slice. Spin it and let the pointer pick.',
+  create(stage) {
+    let dead = false, spinning = false, raf = 0, angle = -Math.PI / 2, highlight = -1, lastIdx = -1, lastFlick = 0;
+    let opts = getOptions(), size = 0, dpr = 1;
+    const canvas = el('canvas', { class: 'wheel-canvas', role: 'img' });
+    const pointer = el('div', { class: 'wheel-pointer', 'aria-hidden': 'true' });
+    pointer.append(svg(POINTER_SVG));
+    const hub = el('button', { class: 'wheel-hub', type: 'button', onclick: () => spin() }, 'Spin');
+    const wrap = el('div', { class: 'wheel-wrap' }, canvas, pointer, hub);
+    stage.append(wrap, hint('Click the hub to spin, or press Space.'));
+    const palette = [
+      { bg: T.cinnabar, fg: T.ivory }, { bg: T.ivory, fg: T.ink }, { bg: T.teal, fg: T.ivory },
+      { bg: T.brass, fg: T.ink }, { bg: T.plum, fg: T.ivory }, { bg: T.iron, fg: T.ivory },
+    ];
+    const ro = new ResizeObserver(layout); ro.observe(wrap);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!dead) draw(); });
+    label();
+
+    function label() { canvas.setAttribute('aria-label', `Wheel with ${opts.length} slices: ${opts.join(', ')}`); }
+    function layout() {
+      const w = wrap.clientWidth; if (!w) return;
+      dpr = Math.min(2, window.devicePixelRatio || 1); size = w;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * dpr);
+      draw();
+    }
+    function colorFor(i, n) {
+      let k = i % palette.length;
+      if (n > 1 && i === n - 1 && k === 0) k = 2;
+      return palette[k];
+    }
+    function indexAtPointer() {
+      const seg = 2 * Math.PI / opts.length;
+      return Math.floor(mod(-Math.PI / 2 - angle, 2 * Math.PI) / seg) % opts.length;
+    }
+    function draw() {
+      const n = opts.length; if (!size || !n) return;
+      const c = canvas.getContext('2d');
+      c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, size, size);
+      const cx = size / 2, cy = size / 2, R = size / 2 - 9, seg = 2 * Math.PI / n;
+      c.beginPath(); c.arc(cx, cy, R + 7, 0, 2 * Math.PI); c.fillStyle = T.brassDeep; c.fill();
+      c.beginPath(); c.arc(cx, cy, R + 2.5, 0, 2 * Math.PI); c.fillStyle = T.ink; c.fill();
+      const fs = clamp(Math.min(R * .085, seg * R * .4), 10, 19);
+      c.font = `600 ${fs}px ${FONT_BODY}`;
+      for (let i = 0; i < n; i++) {
+        const a0 = angle + i * seg, col = colorFor(i, n);
+        c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, a0, a0 + seg); c.closePath();
+        c.fillStyle = col.bg; c.fill();
+        if (highlight >= 0 && i !== highlight) { c.fillStyle = 'rgba(12, 10, 8, .5)'; c.fill(); }
+        c.save(); c.translate(cx, cy); c.rotate(a0 + seg / 2);
+        c.fillStyle = col.fg; c.textAlign = 'right'; c.textBaseline = 'middle';
+        c.fillText(fitText(c, opts[i], R * .64), R - 18, 1);
+        c.restore();
+      }
+      c.strokeStyle = 'rgba(34, 29, 24, .55)'; c.lineWidth = 1.5;
+      for (let i = 0; i < n; i++) {
+        const a = angle + i * seg, ca = Math.cos(a), sa = Math.sin(a);
+        c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + ca * R, cy + sa * R); c.stroke();
+        c.beginPath(); c.arc(cx + ca * (R - 6), cy + sa * (R - 6), 3.3, 0, 2 * Math.PI); c.fillStyle = T.brassHi; c.fill();
+      }
+      if (highlight >= 0) {
+        const a0 = angle + highlight * seg;
+        c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R - 2, a0, a0 + seg); c.closePath();
+        c.strokeStyle = T.brassHi; c.lineWidth = 4; c.lineJoin = 'round'; c.stroke();
+      }
+      c.beginPath(); c.arc(cx, cy, size * .155, 0, 2 * Math.PI); c.fillStyle = T.ink; c.fill();
+    }
+    function spin() {
+      if (spinning || opts.length < 2) return;
+      hideSlip();
+      spinning = true; hub.disabled = true; highlight = -1;
+      const start = angle;
+      const target = start + (5 + randInt(3)) * 2 * Math.PI + rand() * 2 * Math.PI;
+      const dur = reduceMotion ? 900 : 4300 + rand() * 1500;
+      const t0 = performance.now();
+      const ease = t => 1 - Math.pow(1 - t, 4);
+      lastIdx = indexAtPointer();
+      sound.whoosh();
+      const frame = now => {
+        if (dead) return;
+        const t = Math.min(1, (now - t0) / dur);
+        angle = start + (target - start) * ease(t);
+        const idx = indexAtPointer();
+        if (idx !== lastIdx) {
+          lastIdx = idx;
+          if (now - lastFlick > 45) {
+            lastFlick = now; sound.tick();
+            if (!reduceMotion) pointer.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-16deg)' }, { transform: 'rotate(0deg)' }], { duration: 140, easing: 'ease-out' });
+          }
+        }
+        draw();
+        if (t < 1) { raf = requestAnimationFrame(frame); return; }
+        angle = mod(angle, 2 * Math.PI);
+        highlight = indexAtPointer(); draw();
+        spinning = false; hub.disabled = false;
+        announce({ verb: 'The wheel landed on', choice: opts[highlight], again: 'Spin again' });
+        modeIdle();
+      };
+      raf = requestAnimationFrame(frame);
+    }
+    return {
+      play: spin,
+      busy: () => spinning,
+      refresh() { opts = getOptions(); highlight = -1; label(); draw(); },
+      unmount() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); },
+    };
+  },
+};
+
+/* ---------- 2. cards ---------- */
+MODES.cards = {
+  title: 'Pick a card', chip: 'Cards', min: 2, color: '--iron', fg: '--ivory',
+  blurb: 'Your options are dealt face down. Shuffle if you like, then turn one over.',
+  create(stage) {
+    let dead = false, phase = 'ready', opts = getOptions(), cards = [];
+    const table = el('div', { class: 'card-table' });
+    const shuffleBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => shuffleDeck() }, 'Shuffle the deck');
+    stage.append(table, bar(shuffleBtn), hint('Turn over any card. Afterwards the rest flip too, so you can see what you passed up.'));
+    deal();
+
+    function cardWidth(n) { return n <= 3 ? 150 : n <= 6 ? 128 : n <= 10 ? 108 : 92; }
+    function deal() {
+      opts = getOptions(); phase = 'ready';
+      const n = opts.length, w = cardWidth(n), cols = n <= 5 ? n : n <= 8 ? Math.ceil(n / 2) : Math.ceil(n / 3);
+      table.style.setProperty('--card-w', w + 'px');
+      table.style.maxWidth = `${cols * w + (cols - 1) * 14}px`;
+      cards = shuffle(opts.map((_, i) => i)).map((oi, pos) => makeCard(oi, pos));
+      table.replaceChildren(...cards);
+    }
+    function makeCard(oi, pos) {
+      const face = el('span', { class: 'pcard-face', 'aria-hidden': 'true' });
+      const card = el('button', { class: 'pcard', type: 'button', 'aria-label': `Face-down card ${pos + 1}` },
+        el('span', { class: 'pcard-inner' }, el('span', { class: 'pcard-back' }), face));
+      setFace(card, oi);
+      card.addEventListener('click', () => pick(card));
+      return card;
+    }
+    function setFace(card, oi) {
+      card.dataset.opt = String(oi);
+      const face = card.querySelector('.pcard-face');
+      const rank = RANKS[oi % RANKS.length], suit = SUITS[oi % SUITS.length];
+      face.classList.toggle('red', suit.red);
+      face.replaceChildren(
+        el('span', { class: 'pip pip-tl' }, el('b', {}, rank), suit.s),
+        el('span', { class: 'pcard-name' }, opts[oi]),
+        el('span', { class: 'pip pip-br' }, el('b', {}, rank), suit.s));
+    }
+    function reveal(card) { card.classList.add('flipped'); card.querySelector('.pcard-face').removeAttribute('aria-hidden'); }
+    function pick(card) {
+      if (phase !== 'ready') return;
+      phase = 'revealing';
+      const choice = opts[Number(card.dataset.opt)];
+      card.classList.add('chosen'); reveal(card);
+      card.setAttribute('aria-label', `You drew ${choice}`);
+      sound.card();
+      setTimeout(() => {
+        if (dead) return;
+        phase = 'revealed';
+        announce({ verb: 'You drew', choice, note: 'The other cards are face up now. If one gives you a pang, that is worth knowing.', again: 'Shuffle and draw again' });
+        cards.forEach((c, i) => { if (c !== card) setTimeout(() => { if (!dead) { c.classList.add('other'); reveal(c); c.setAttribute('aria-label', opts[Number(c.dataset.opt)]); } }, 600 + i * 70); });
+        modeIdle();
+      }, 700);
+    }
+    async function shuffleDeck() {
+      if (phase === 'shuffling' || phase === 'revealing') return;
+      hideSlip();
+      const wasRevealed = phase === 'revealed';
+      phase = 'shuffling'; shuffleBtn.disabled = true;
+      if (wasRevealed) {
+        cards.forEach(c => c.classList.remove('flipped', 'chosen', 'other'));
+        await wait(reduceMotion ? 30 : 480); if (dead) return;
+      }
+      if (!reduceMotion) {
+        const tr = table.getBoundingClientRect(), cx = tr.left + tr.width / 2, cy = tr.top + tr.height / 2;
+        const offs = cards.map(c => { const r = c.getBoundingClientRect(); return [cx - (r.left + r.width / 2), cy - (r.top + r.height / 2)]; });
+        cards.forEach((c, i) => { c.style.zIndex = String(i + 1); c.style.transform = `translate(${offs[i][0]}px, ${offs[i][1]}px) rotate(${(rand() - .5) * 20}deg)`; });
+        sound.card();
+        await wait(400); if (dead) return;
+        for (let k = 0; k < 3; k++) {
+          cards.forEach((c, i) => {
+            c.style.zIndex = String(1 + randInt(cards.length));
+            c.style.transform = `translate(${offs[i][0] + (rand() - .5) * 30}px, ${offs[i][1] + (rand() - .5) * 10}px) rotate(${(rand() - .5) * 26}deg)`;
+          });
+          sound.card();
+          await wait(160); if (dead) return;
+        }
+      }
+      const order = shuffle(opts.map((_, i) => i));
+      cards.forEach((c, pos) => {
+        setFace(c, order[pos]);
+        c.setAttribute('aria-label', `Face-down card ${pos + 1}`);
+        c.querySelector('.pcard-face').setAttribute('aria-hidden', 'true');
+      });
+      cards.forEach((c, i) => { c.style.transitionDelay = reduceMotion ? '' : `${i * 35}ms`; c.style.transform = ''; });
+      await wait(reduceMotion ? 30 : 480 + cards.length * 35); if (dead) return;
+      cards.forEach(c => { c.style.transitionDelay = ''; c.style.zIndex = ''; });
+      phase = 'ready'; shuffleBtn.disabled = false;
+      modeIdle();
+    }
+    return {
+      play: shuffleDeck,
+      busy: () => phase === 'shuffling' || phase === 'revealing',
+      refresh: deal,
+      unmount() { dead = true; },
+    };
+  },
+};
+
+/* ---------- 3. coin ---------- */
+MODES.coin = {
+  title: 'Flip a coin', chip: 'Coin', min: 2, color: '--brass', fg: '--ink',
+  blurb: 'For two options. While it is in the air, notice which side you are hoping for.',
+  create(stage) {
+    let dead = false, flipping = false, rot = 0, handle = null;
+    const coin = el('div', { class: 'coin' });
+    for (let z = -3; z <= 3; z++) coin.append(el('span', { class: 'coin-edge', style: `transform: translateZ(${z}px)` }));
+    const heads = el('div', { class: 'coin-face heads' }), tails = el('div', { class: 'coin-face tails' });
+    coin.append(heads, tails);
+    const shadow = el('div', { class: 'coin-shadow' });
+    const flipBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => flip() }, 'Flip the coin');
+    const picker = pairPicker('coin', ['Heads', 'Tails'], paintFaces);
+    stage.append(picker.root, el('div', { class: 'coin-scene' }, coin, shadow), bar(flipBtn), hint('When it lands you get a gut check. That is the useful part.'));
+    paintFaces();
+
+    function paintFaces() {
+      const [a, b] = getPair('coin');
+      heads.replaceChildren(el('span', { class: 'coin-side' }, 'Heads'), el('span', { class: 'coin-name' }, a));
+      tails.replaceChildren(el('span', { class: 'coin-side' }, 'Tails'), el('span', { class: 'coin-name' }, b));
+    }
+    async function flip() {
+      if (flipping) return;
+      const [a, b] = getPair('coin');
+      if (!a || !b) return;
+      hideSlip();
+      flipping = true; flipBtn.disabled = true; picker.disable(true);
+      const isHeads = rand() < .5;
+      const base = rot - mod(rot, 360);
+      const end = base + (5 + randInt(3)) * 360 + (isHeads ? 0 : 180);
+      const mid = rot + (end - rot) * .55;
+      const dur = reduceMotion ? 450 : 1800;
+      const tf = (y, r, s) => `translateY(${y}px) rotateX(${r}deg) scale(${s})`;
+      sound.flip();
+      const anim = coin.animate([
+        { transform: tf(0, rot, 1), easing: 'cubic-bezier(.2, .7, .4, 1)' },
+        { transform: tf(-170, mid, 1.18), offset: .48, easing: 'cubic-bezier(.6, 0, .8, .4)' },
+        { transform: tf(0, end, 1), offset: .88, easing: 'ease-out' },
+        { transform: tf(-12, end, 1), offset: .94, easing: 'ease-in' },
+        { transform: tf(0, end, 1) },
+      ], { duration: dur });
+      shadow.animate([
+        { transform: 'scale(1)', opacity: .5 },
+        { transform: 'scale(.5)', opacity: .18, offset: .48 },
+        { transform: 'scale(1)', opacity: .5, offset: .88 },
+        { transform: 'scale(1)', opacity: .5 },
+      ], { duration: dur });
+      coin.style.transform = tf(0, end, 1);
+      try { await anim.finished; } catch { /* cancelled */ }
+      if (dead) return;
+      rot = end; sound.thud();
+      flipping = false; flipBtn.disabled = false; picker.disable(false);
+      const winner = isHeads ? a : b, other = isHeads ? b : a;
+      handle = announce({
+        verb: isHeads ? 'Heads. The coin says' : 'Tails. The coin says', choice: winner,
+        note: 'Gut check: how did you feel the moment it landed?', again: 'Flip again',
+        actions: [
+          { label: `Relieved. ${winner} it is`, primary: true, onClick: () => handle.update({ verb: 'Coin and gut agree', choice: winner, note: 'No second-guessing. Go with it.' }) },
+          { label: `Disappointed. I wanted ${other}`, onClick: () => { handle.update({ verb: 'Your gut overruled the coin', choice: other, note: `The coin's real job was to show you that you wanted ${other}.` }); sound.chime(); } },
+        ],
+      });
+      modeIdle();
+    }
+    return {
+      play: flip,
+      busy: () => flipping,
+      refresh() { picker.fill(); paintFaces(); },
+      unmount() { dead = true; },
+    };
+  },
+};
+
+/* ---------- 4. peg drop ---------- */
+MODES.pegs = {
+  title: 'Peg drop', chip: 'Peg drop', min: 2, color: '--teal', fg: '--ivory',
+  blurb: 'Each option gets a bin at the bottom. Drop the ball wherever you like and let the pegs decide.',
+  create(stage) {
+    let dead = false, raf = 0, running = false, opts = getOptions(), order = shuffle(opts.map((_, i) => i));
+    let W = 0, H = 0, dpr = 1, pegs = [], binW = 0, binTop = 0, ballR = 8, pegR = 4;
+    let ball = null, trail = [], landedBin = -1, lockedBin = -1, settleT = 0, runT = 0, ghostX = null, last = 0, acc = 0;
+    const canvas = el('canvas', { class: 'peg-canvas', role: 'img' });
+    const wrap = el('div', { class: 'peg-wrap' }, canvas);
+    const dropBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => drop() }, 'Drop a ball');
+    const binsBtn = el('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { if (running) return; order = shuffle(order); ball = null; landedBin = -1; hideSlip(); label(); draw(); } }, 'Shuffle the bins');
+    stage.append(wrap, bar(dropBtn, binsBtn), hint('Click along the top of the board to aim. The pegs decide the rest.'));
+    const ro = new ResizeObserver(layout); ro.observe(wrap);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!dead && !running) draw(); });
+    canvas.addEventListener('pointermove', e => { if (running) return; ghostX = clampX(e.offsetX); draw(); });
+    canvas.addEventListener('pointerleave', () => { ghostX = null; if (!running) draw(); });
+    canvas.addEventListener('click', e => drop(e.offsetX));
+    label();
+
+    function label() { canvas.setAttribute('aria-label', `Pegboard with bins: ${order.map(i => opts[i]).join(', ')}`); }
+    function clampX(x) { return clamp(x, ballR + 2, W - ballR - 2); }
+    function layout() {
+      const w = Math.round(wrap.clientWidth);
+      if (!w || w === W) return;
+      W = w; H = Math.round(clamp(W * 1.02, 380, 560));
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.height = H + 'px';
+      build(); draw();
+    }
+    function build() {
+      const n = opts.length;
+      binW = W / n;
+      ballR = clamp(binW * .3, 5, 9);
+      pegR = W < 420 ? 3 : 4;
+      binTop = H - clamp(H * .22, 80, 120);
+      // Spacing is stretched so the pattern meets both walls and the gap at a wall always fits the ball.
+      const minS = Math.max(4 * ballR + 2 * pegR + 6, clamp(W / 10, 32, 48));
+      const cols = Math.max(2, Math.floor(W / minS)), s = W / cols;
+      const rowGap = s * .866, top = 70, bottom = binTop - 28;
+      pegs = [];
+      for (let r = 0, y = top; y <= bottom; r++, y += rowGap) {
+        if (r % 2) for (let k = 0; k <= cols; k++) pegs.push({ x: k * s, y, glow: 0 });
+        else for (let k = 0; k < cols; k++) pegs.push({ x: (k + .5) * s, y, glow: 0 });
+      }
+    }
+    function drop(x) {
+      if (running || opts.length < 2 || !W) return;
+      hideSlip();
+      landedBin = -1; lockedBin = -1; settleT = 0; runT = 0; trail = []; ghostX = null;
+      const sx = x == null ? ballR + 2 + rand() * (W - 2 * ballR - 4) : clampX(x);
+      ball = { x: sx, y: 24, vx: (Math.random() - .5) * 40, vy: 0 };
+      running = true; dropBtn.disabled = true; binsBtn.disabled = true;
+      sound.soft();
+      last = performance.now(); acc = 0;
+      raf = requestAnimationFrame(frame);
+    }
+    function physics(dt) {
+      const b = ball;
+      b.vy += 1500 * dt;
+      const sp = Math.hypot(b.vx, b.vy);
+      if (sp > 950) { b.vx *= 950 / sp; b.vy *= 950 / sp; }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < ballR) { b.x = ballR; b.vx = Math.abs(b.vx) * .5; }
+      else if (b.x > W - ballR) { b.x = W - ballR; b.vx = -Math.abs(b.vx) * .5; }
+      const minD = ballR + pegR;
+      for (const p of pegs) {
+        const dx = b.x - p.x, dy = b.y - p.y;
+        if (dx > minD || dx < -minD || dy > minD || dy < -minD) continue;
+        const d2 = dx * dx + dy * dy;
+        if (d2 >= minD * minD) continue;
+        const d = Math.sqrt(d2) || .0001, nx = dx / d, ny = dy / d;
+        b.x = p.x + nx * minD; b.y = p.y + ny * minD;
+        const vn = b.vx * nx + b.vy * ny;
+        if (vn < 0) {
+          b.vx -= 1.45 * vn * nx; b.vy -= 1.45 * vn * ny;
+          b.vx += (Math.random() - .5) * 50;
+          if (p.glow < .5 && -vn > 60) sound.peg();
+          p.glow = 1;
+        }
+      }
+      const md = ballR + 2;
+      for (let k = 1; k < opts.length; k++) {
+        const x = k * binW, dx = b.x - x;
+        if (dx >= md || dx <= -md) continue;
+        const cy = clamp(b.y, binTop, H), dy = b.y - cy, d2 = dx * dx + dy * dy;
+        if (d2 >= md * md) continue;
+        let d = Math.sqrt(d2), nx, ny;
+        if (d < .001) { nx = Math.random() < .5 ? -1 : 1; ny = 0; d = 0; } else { nx = dx / d; ny = dy / d; }
+        b.x = x + nx * md; b.y = cy + ny * md;
+        const vn = b.vx * nx + b.vy * ny;
+        if (vn < 0) { b.vx -= 1.4 * vn * nx; b.vy -= 1.4 * vn * ny; b.vx += (Math.random() - .5) * 30; }
+      }
+      const floor = H - 4 - ballR;
+      if (b.y > floor) { b.y = floor; if (b.vy > 0) b.vy = -b.vy * .3; b.vx *= .85; }
+    }
+    function frame(now) {
+      if (dead) return;
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      const h = 1 / 240;
+      acc += dt;
+      while (acc >= h) {
+        physics(h); acc -= h; runT += h;
+        if (lockedBin < 0 && (ball.y > binTop + ballR + 2 || runT > 14)) lockedBin = clamp(Math.floor(ball.x / binW), 0, opts.length - 1);
+        if (lockedBin >= 0) settleT += h;
+      }
+      for (const p of pegs) p.glow *= .9;
+      trail.push([ball.x, ball.y]); if (trail.length > 14) trail.shift();
+      draw();
+      if (lockedBin >= 0 && settleT > .9) { land(); return; }
+      raf = requestAnimationFrame(frame);
+    }
+    function land() {
+      landedBin = lockedBin; trail = [];
+      running = false; dropBtn.disabled = false; binsBtn.disabled = false;
+      draw(); sound.thud();
+      announce({ verb: 'The ball dropped into', choice: opts[order[landedBin]], again: 'Drop another ball' });
+      modeIdle();
+    }
+    function draw() {
+      if (!W) return;
+      const c = canvas.getContext('2d'), n = opts.length;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+      roundRect(c, 0, 0, W, H, 16); c.fillStyle = 'rgba(0, 0, 0, .2)'; c.fill();
+      c.setLineDash([4, 6]); c.strokeStyle = T.chalkFaint; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(14, 44); c.lineTo(W - 14, 44); c.stroke(); c.setLineDash([]);
+      for (let k = 0; k < n; k++) {
+        const x0 = k * binW, won = k === landedBin;
+        c.fillStyle = won ? T.brassGlow : (k % 2 ? 'rgba(0, 0, 0, .18)' : 'rgba(0, 0, 0, .08)');
+        c.fillRect(x0, binTop, binW, H - binTop);
+        const name = opts[order[k]];
+        c.fillStyle = won ? T.ivory : T.chalk;
+        if (binW >= 96) {
+          c.font = `600 14px ${FONT_BODY}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+          c.fillText(fitText(c, name, binW - 14), x0 + binW / 2, H - 16);
+        } else {
+          c.font = `600 ${clamp(binW * .42, 10, 14)}px ${FONT_BODY}`;
+          c.save(); c.translate(x0 + binW / 2, H - 12); c.rotate(-Math.PI / 2);
+          c.textAlign = 'left'; c.textBaseline = 'middle';
+          c.fillText(fitText(c, name, H - binTop - 22), 0, 0);
+          c.restore();
+        }
+      }
+      c.strokeStyle = T.ivory; c.lineWidth = 3; c.lineCap = 'round';
+      for (let k = 1; k < n; k++) { c.beginPath(); c.moveTo(k * binW, binTop); c.lineTo(k * binW, H - 4); c.stroke(); }
+      for (const p of pegs) {
+        if (p.glow > .05) { c.beginPath(); c.arc(p.x, p.y, pegR + 7 * p.glow, 0, 2 * Math.PI); c.fillStyle = `rgba(214, 168, 75, ${.45 * p.glow})`; c.fill(); }
+        c.beginPath(); c.arc(p.x, p.y, pegR, 0, 2 * Math.PI); c.fillStyle = p.glow > .3 ? T.brassHi : T.ivory; c.fill();
+      }
+      if (ghostX != null && !running) {
+        c.beginPath(); c.arc(ghostX, 24, ballR, 0, 2 * Math.PI);
+        c.setLineDash([3, 3]); c.strokeStyle = T.cinnabarHi; c.lineWidth = 2; c.stroke(); c.setLineDash([]);
+      }
+      if (ball) {
+        trail.forEach(([x, y], i) => { c.beginPath(); c.arc(x, y, ballR * (i / trail.length) * .8, 0, 2 * Math.PI); c.fillStyle = `rgba(201, 69, 47, ${.25 * i / trail.length})`; c.fill(); });
+        const g = c.createRadialGradient(ball.x - ballR * .35, ball.y - ballR * .4, 1, ball.x, ball.y, ballR);
+        g.addColorStop(0, T.cinnabarHi); g.addColorStop(1, T.cinnabar);
+        c.beginPath(); c.arc(ball.x, ball.y, ballR, 0, 2 * Math.PI); c.fillStyle = g; c.fill();
+      }
+    }
+    return {
+      play: () => drop(),
+      busy: () => running,
+      refresh() { opts = getOptions(); order = shuffle(opts.map((_, i) => i)); ball = null; landedBin = -1; label(); if (W) { build(); draw(); } },
+      unmount() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); },
+    };
+  },
+};
+
+/* ---------- 5. head to head ---------- */
+MODES.duel = {
+  title: 'Head to head', chip: 'Head to head', min: 2, color: '--plum', fg: '--ivory',
+  blurb: "You pick the winner of each matchup until one option is left. Good for when you don't know what you want.",
+  create(stage) {
+    let dead = false, locked = false, opts, rounds, roundIdx, matchIdx, champion, totalRounds;
+    const meta = el('p', { class: 'label' });
+    const left = el('button', { class: 'contender', type: 'button', onclick: () => choose(0) });
+    const right = el('button', { class: 'contender', type: 'button', onclick: () => choose(1) });
+    const duel = el('div', { class: 'duel' }, left, el('span', { class: 'vs', 'aria-hidden': 'true' }, 'vs'), right);
+    const coinBtn = el('button', { class: 'link-btn', type: 'button', onclick: () => choose(rand() < .5 ? 0 : 1) }, 'Too close to call? Let a coin pick this one.');
+    const champName = el('p', { class: 'champion-name' });
+    const champ = el('div', { class: 'champion', hidden: true }, el('span', { class: 'label' }, 'Champion'), champName);
+    const bracket = el('div', { class: 'bracket' });
+    stage.append(meta, duel, champ, coinBtn, bracket);
+    const onKey = e => {
+      if (isTyping(e) || !ui.ledger.hidden) return;
+      if (e.key === 'ArrowLeft' || e.key === '1') { e.preventDefault(); choose(0); }
+      else if (e.key === 'ArrowRight' || e.key === '2') { e.preventDefault(); choose(1); }
+    };
+    document.addEventListener('keydown', onKey);
+    start();
+
+    function start() {
+      opts = getOptions(); champion = null; locked = false;
+      totalRounds = Math.ceil(Math.log2(opts.length));
+      rounds = [makeRound(shuffle(opts.map((_, i) => i)))]; roundIdx = 0; matchIdx = 0;
+      render();
+    }
+    function makeRound(entrants) {
+      const r = { matches: [], bye: null };
+      for (let i = 0; i + 1 < entrants.length; i += 2) r.matches.push({ a: entrants[i], b: entrants[i + 1], w: null });
+      if (entrants.length % 2) r.bye = entrants[entrants.length - 1];
+      return r;
+    }
+    function roundName(ri) { return ri + 1 === totalRounds ? 'Final' : `Round ${ri + 1}`; }
+    function choose(side) {
+      if (locked || champion != null) return;
+      const m = rounds[roundIdx].matches[matchIdx];
+      if (!m) return;
+      locked = true;
+      m.w = side === 0 ? m.a : m.b;
+      (side === 0 ? left : right).classList.add('won');
+      (side === 0 ? right : left).classList.add('lost');
+      sound.card();
+      setTimeout(() => { if (!dead) advance(); }, reduceMotion ? 120 : 430);
+    }
+    function advance() {
+      locked = false;
+      const r = rounds[roundIdx];
+      matchIdx++;
+      if (matchIdx >= r.matches.length) {
+        const winners = r.matches.map(m => m.w);
+        if (r.bye != null) winners.unshift(r.bye); // the bye plays first next round, so it can't sit out twice
+        if (winners.length === 1) { champion = winners[0]; render(); finish(); return; }
+        rounds.push(makeRound(winners)); roundIdx++; matchIdx = 0;
+      }
+      render();
+    }
+    function finish() {
+      const beaten = [];
+      rounds.forEach(r => r.matches.forEach(m => { if (m.w === champion) beaten.push(opts[m.w === m.a ? m.b : m.a]); }));
+      announce({ verb: 'Your champion', choice: opts[champion], note: beaten.length ? `Beat ${listJoin(beaten)} on the way.` : '', again: 'Run a new bracket' });
+    }
+    function setContender(btn, idx, key) {
+      btn.classList.remove('won', 'lost');
+      btn.replaceChildren(el('span', { class: 'contender-key', 'aria-hidden': 'true' }, key), opts[idx]);
+      btn.setAttribute('aria-label', `Pick ${opts[idx]}`);
+    }
+    function render() {
+      const done = champion != null;
+      duel.hidden = done; coinBtn.hidden = done; champ.hidden = !done;
+      if (done) {
+        meta.textContent = 'Bracket complete';
+        champName.textContent = opts[champion];
+      } else {
+        const r = rounds[roundIdx], m = r.matches[matchIdx];
+        meta.textContent = `${roundIdx + 1 === totalRounds ? 'Final' : `Round ${roundIdx + 1} of ${totalRounds}`} · Match ${matchIdx + 1} of ${r.matches.length}`;
+        setContender(left, m.a, '← or 1');
+        setContender(right, m.b, '→ or 2');
+        if (!reduceMotion) duel.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
+      }
+      bracket.replaceChildren(...rounds.map((r, ri) => {
+        const row = el('div', { class: 'bracket-round' }, el('span', { class: 'label' }, roundName(ri)));
+        r.matches.forEach((m, mi) => {
+          if (m.w != null) row.append(el('span', { class: 'bout' }, el('b', {}, opts[m.w]), ' over ', el('s', {}, opts[m.w === m.a ? m.b : m.a])));
+          else row.append(el('span', { class: 'bout' + (!done && ri === roundIdx && mi === matchIdx ? ' live' : '') }, `${opts[m.a]} vs ${opts[m.b]}`));
+        });
+        if (r.bye != null) row.append(el('span', { class: 'bout bye' }, `${opts[r.bye]} gets a bye`));
+        return row;
+      }));
+    }
+    return {
+      play: start,
+      primary: null,
+      busy: () => false,
+      refresh() { hideSlip(); start(); },
+      unmount() { dead = true; document.removeEventListener('keydown', onKey); },
+    };
+  },
+};
+
+/* ---------- 6. knockout ---------- */
+MODES.knockout = {
+  title: 'Last one standing', chip: 'Knockout', min: 2, color: '--cinnabar-deep', fg: '--ivory',
+  blurb: 'Options get knocked out at random. Tap a knocked-out option to rescue it. What you rescue is a clue.',
+  create(stage) {
+    let dead = false, running = false, finished = false, opts = [], tiles = [], st = [];
+    const grid = el('div', { class: 'ko-grid' });
+    const startBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => run() }, 'Start the knockout');
+    const status = el('p', { class: 'stage-hint', 'aria-live': 'polite' }, 'Each option can be rescued once.');
+    stage.append(grid, bar(startBtn), status);
+    build();
+
+    function build() {
+      opts = getOptions(); finished = false;
+      const cols = opts.length <= 4 ? opts.length : opts.length <= 6 ? 3 : 4;
+      grid.style.setProperty('--cols', String(cols));
+      grid.style.maxWidth = `${cols * 190 + (cols - 1) * 12}px`;
+      st = opts.map(() => ({ out: false, rescued: false }));
+      tiles = opts.map((o, i) => el('button', { class: 'ko-tile', type: 'button', 'aria-label': o, onclick: () => rescue(i) }, el('span', { class: 'ko-name' }, o)));
+      grid.replaceChildren(...tiles);
+    }
+    const alive = () => st.reduce((a, s, i) => (s.out ? a : (a.push(i), a)), []);
+    const spot = i => tiles.forEach((t, k) => t.classList.toggle('spot', k === i));
+    function knock(i) {
+      st[i].out = true;
+      tiles[i].classList.add('out');
+      tiles[i].classList.toggle('can-rescue', !st[i].rescued);
+      tiles[i].setAttribute('aria-label', st[i].rescued ? `${opts[i]}, out` : `${opts[i]}, out. Press to rescue.`);
+    }
+    function rescue(i) {
+      if (!running || !st[i].out || st[i].rescued) return;
+      st[i].out = false; st[i].rescued = true;
+      const t = tiles[i];
+      t.classList.remove('out', 'can-rescue');
+      t.append(el('span', { class: 'ko-tag' }, 'Rescued'));
+      t.setAttribute('aria-label', `${opts[i]}, rescued`);
+      status.textContent = `${opts[i]} is back in.`;
+      sound.soft();
+    }
+    async function run() {
+      if (running) return;
+      hideSlip();
+      if (finished || st.some(s => s.out)) build();
+      running = true; startBtn.disabled = true;
+      status.textContent = 'Knocking out at random. Tap a struck option to rescue it.';
+      while (alive().length > 1) {
+        const many = alive().length > 5;
+        const flicks = reduceMotion ? 0 : many ? 3 : 6;
+        for (let k = 0; k < flicks; k++) {
+          spot(pickOne(alive())); sound.tick();
+          await wait(many ? 70 : 90 + k * 30); if (dead) return;
+        }
+        const pool = alive();
+        if (pool.length <= 1) break;
+        const v = pickOne(pool);
+        spot(v);
+        await wait(many ? 150 : 340); if (dead) return;
+        spot(-1); knock(v); sound.stamp();
+        await wait(reduceMotion ? 250 : many ? 430 : 780); if (dead) return;
+      }
+      spot(-1);
+      const w = alive()[0];
+      running = false; finished = true; startBtn.disabled = false; startBtn.textContent = 'Run it again';
+      tiles.forEach(t => t.classList.remove('can-rescue'));
+      tiles[w].classList.add('winner');
+      const saved = st.reduce((a, s, i) => (s.rescued ? (a.push(i), a) : a), []);
+      let note = 'It survived every round without help.';
+      if (saved.length) note = saved.includes(w) ? 'You rescued it along the way. That says a lot.' : `You rescued ${listJoin(saved.map(i => opts[i]))}. Worth a second look.`;
+      status.textContent = 'Each option can be rescued once.';
+      announce({ verb: 'Last one standing', choice: opts[w], note, again: 'Run it again' });
+      modeIdle();
+    }
+    return {
+      play: run,
+      busy: () => running,
+      refresh() { build(); startBtn.textContent = 'Start the knockout'; },
+      unmount() { dead = true; },
+    };
+  },
+};
+
+/* ---------- 7. scale ---------- */
+MODES.scale = {
+  title: 'Weigh it up', chip: 'Scale', min: 2, color: '--stone-deep', fg: '--ivory',
+  blurb: 'Put reasons on each side, from a feather to an anvil, and see which way the scale tips.',
+  create(stage) {
+    let dead = false, raf = 0, angle = 0, vel = 0, target = 0, lastT = 0;
+    const L = 220, PX = 300, PY = 80;
+    const pan = side => `
+      <g class="sc-pan" data-side="${side}">
+        <line class="sc-string" x1="0" y1="0" x2="-62" y2="104"/><line class="sc-string" x1="0" y1="0" x2="62" y2="104"/>
+        <path class="sc-bowl" d="M-78 104 H78 C70 132 40 142 0 142 C-40 142 -70 132 -78 104 Z"/>
+        <g class="sc-tokens"></g>
+        <text class="sc-name" x="0" y="174"></text>
+        <text class="sc-total" x="0" y="196"></text>
+      </g>`;
+    const scaleSvg = svg(`
+      <svg class="scale-svg" viewBox="0 0 600 340" role="img">
+        <rect class="sc-brass" x="292" y="84" width="16" height="216" rx="4"/>
+        <path class="sc-brass-deep" d="M222 312 C242 292 358 292 378 312 Z"/>
+        <rect class="sc-brass" x="200" y="308" width="200" height="14" rx="7"/>
+        ${pan(0)}${pan(1)}
+        <g class="sc-beam">
+          <rect class="sc-brass" x="76" y="74" width="448" height="12" rx="6"/>
+          <circle class="sc-brass-hi" cx="80" cy="80" r="7"/><circle class="sc-brass-hi" cx="520" cy="80" r="7"/>
+          <circle class="sc-pivot" cx="300" cy="80" r="13"/>
+        </g>
+      </svg>`);
+    const beam = scaleSvg.querySelector('.sc-beam');
+    const pans = [...scaleSvg.querySelectorAll('.sc-pan')];
+    const cols = el('div', { class: 'scale-cols' });
+    const readBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => readScale() }, 'Read the scale');
+    const status = hint('Heavier reasons count for more. An anvil beats a pile of feathers.');
+    const picker = pairPicker('scale', ['Left pan', 'Right pan'], renderAll);
+    stage.append(picker.root, scaleSvg, bar(readBtn), status, cols);
+    renderAll();
+    applyAngle();
+
+    function renderAll() {
+      const [a, b] = getPair('scale');
+      cols.replaceChildren(sideCol(0, a), sideCol(1, b));
+      [a, b].forEach((name, i) => {
+        const p = pans[i], list = reasonsFor(name);
+        p.querySelector('.sc-name').textContent = name.length > 18 ? name.slice(0, 17) + '…' : name;
+        p.querySelector('.sc-total').textContent = `WEIGHT ${weightOf(name)}`;
+        paintTokens(p.querySelector('.sc-tokens'), list);
+      });
+      scaleSvg.setAttribute('aria-label', `Balance scale: ${a} weighs ${weightOf(a)}, ${b} weighs ${weightOf(b)}`);
+      tilt();
+    }
+    function tilt() {
+      const [a, b] = getPair('scale');
+      target = clamp((weightOf(b) - weightOf(a)) * 3.2, -16, 16);
+      if (reduceMotion) { angle = target; vel = 0; applyAngle(); return; }
+      if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(spring); }
+    }
+    function spring(now) {
+      if (dead) return;
+      const dt = Math.min(.033, (now - lastT) / 1000); lastT = now;
+      vel += ((target - angle) * 90 - vel * 9) * dt;
+      angle += vel * dt;
+      applyAngle();
+      if (Math.abs(target - angle) < .02 && Math.abs(vel) < .02) { angle = target; applyAngle(); raf = 0; return; }
+      raf = requestAnimationFrame(spring);
+    }
+    function applyAngle() {
+      const r = angle * Math.PI / 180, dx = L * Math.cos(r), dy = L * Math.sin(r);
+      beam.setAttribute('transform', `rotate(${angle.toFixed(3)} ${PX} ${PY})`);
+      pans[0].setAttribute('transform', `translate(${(PX - dx).toFixed(2)} ${(PY - dy).toFixed(2)})`);
+      pans[1].setAttribute('transform', `translate(${(PX + dx).toFixed(2)} ${(PY + dy).toFixed(2)})`);
+    }
+    function paintTokens(g, list) {
+      g.replaceChildren();
+      let x = -66, y = 112, rowH = 0;
+      for (const r of list.slice(0, 16)) {
+        const spec = WEIGHTS[r.w], h = r.w >= 4 ? 25 : 16;
+        if (x + spec.w > 66) { x = -66; y -= rowH + 2; rowH = 0; }
+        const node = document.createElementNS(SVG_NS, 'g');
+        node.setAttribute('transform', `translate(${x + spec.w / 2} ${y})`);
+        node.innerHTML = spec.svg;
+        g.append(node);
+        x += spec.w + 3; rowH = Math.max(rowH, h);
+      }
+    }
+    function sideCol(side, name) {
+      const list = reasonsFor(name);
+      const input = el('input', { class: 'field', id: `reason-${side}`, type: 'text', maxlength: 60, autocomplete: 'off', placeholder: `A reason for ${name}`, 'aria-label': `New reason for ${name}` });
+      const weight = el('select', { class: 'select', id: `weight-${side}`, 'aria-label': 'How heavy is this reason?' },
+        [1, 2, 3, 4, 5].map(w => el('option', { value: w }, `${WEIGHTS[w].name} (${w})`)));
+      weight.value = '3';
+      const form = el('form', { class: 'reason-form' }, input, weight, el('button', { class: 'btn btn-ghost btn-small', type: 'submit' }, 'Add'));
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const t = input.value.trim();
+        if (!t) { input.focus(); return; }
+        list.push({ t: t.slice(0, 60), w: Number(weight.value) });
+        const keep = weight.value;
+        markEdited(); save(); hideSlip(); renderAll();
+        const again = document.getElementById(`reason-${side}`), w2 = document.getElementById(`weight-${side}`);
+        if (w2) w2.value = keep;
+        if (again) again.focus();
+      });
+      const items = list.map((r, i) => el('li', { class: 'reason' },
+        el('span', { class: 'reason-text' }, r.t),
+        el('span', { class: 'reason-w' }, `${WEIGHTS[r.w].name} ${r.w}`),
+        el('button', { class: 'x-btn', type: 'button', 'aria-label': `Remove reason: ${r.t}`, onclick: () => { list.splice(i, 1); save(); hideSlip(); renderAll(); } }, '×')));
+      return el('section', { class: 'side' },
+        el('div', { class: 'side-head' }, el('h3', { class: 'side-name' }, name), el('span', { class: 'side-total' }, `Weight ${weightOf(name)}`)),
+        items.length ? el('ul', { class: 'reason-list' }, items) : el('p', { class: 'side-empty' }, 'No reasons yet.'),
+        form);
+    }
+    function readScale() {
+      const [a, b] = getPair('scale'), ta = weightOf(a), tb = weightOf(b);
+      if (!ta && !tb) { status.textContent = 'Put at least one reason on the scale first.'; return; }
+      if (!reduceMotion) { vel += ta === tb ? 40 : (tb > ta ? 30 : -30); tilt(); }
+      if (ta === tb) {
+        announce({
+          verb: 'Dead even', choice: 'A true toss-up', note: `${a} and ${b} both weigh ${ta}. Let chance break the tie.`,
+          again: null, celebrate: false,
+          actions: [{ label: 'Flip a coin for it', primary: true, onClick: () => { state.pairs.coin = [a, b]; save(); setMode('coin'); } }],
+        });
+        return;
+      }
+      const win = ta > tb ? a : b, lose = ta > tb ? b : a;
+      announce({ verb: 'The scale tips to', choice: win, note: `${win} outweighs ${lose}, ${Math.max(ta, tb)} to ${Math.min(ta, tb)}.`, again: null });
+    }
+    return {
+      play: readScale,
+      busy: () => false,
+      refresh() { picker.fill(); renderAll(); },
+      unmount() { dead = true; cancelAnimationFrame(raf); },
+    };
+  },
+};
+
+/* ---------- 8. oracle ---------- */
+MODES.oracle = {
+  title: 'Ask the oracle', chip: 'Oracle', min: 0, color: '--orb', fg: '--ivory',
+  blurb: 'For yes-or-no questions. Type yours in the question box, then ask.',
+  create(stage) {
+    let dead = false, asking = false, lastQ = '';
+    const q = el('p', { class: 'oracle-q' });
+    const text = el('span', { class: 'orb-text show' }, 'Ask me something.');
+    const orb = el('div', { class: 'orb' }, text);
+    const askBtn = el('button', { class: 'btn btn-primary', type: 'button', onclick: () => ask() }, 'Ask the oracle');
+    stage.append(q, el('div', { class: 'orb-scene' }, orb, el('div', { class: 'orb-stand', 'aria-hidden': 'true' })), bar(askBtn), hint('It works best on questions you can answer with yes or no.'));
+    paintQ();
+
+    function paintQ() {
+      const t = state.question.trim();
+      q.textContent = t ? `“${t}”` : 'Type a yes-or-no question in the question box.';
+      q.classList.toggle('muted', !t);
+    }
+    async function ask() {
+      if (asking) return;
+      hideSlip();
+      asking = true; askBtn.disabled = true;
+      text.classList.remove('show'); orb.classList.add('churn'); sound.whoosh();
+      await wait(reduceMotion ? 300 : 1700); if (dead) return;
+      const norm = state.question.trim().toLowerCase();
+      let mood;
+      if (norm && norm === lastQ && rand() < .6) mood = 'again';
+      else { const r = rand(); mood = r < .42 ? 'yes' : r < .84 ? 'no' : 'maybe'; }
+      lastQ = norm;
+      const answer = pickOne(ORACLE[mood]);
+      orb.classList.remove('churn');
+      text.textContent = answer; text.classList.add('show');
+      asking = false; askBtn.disabled = false;
+      const notes = { yes: 'Leaning yes.', no: 'Leaning no.', maybe: 'No clear answer this time.', again: 'Asking twice usually means you were hoping for a different answer.' };
+      announce({ verb: 'The oracle says', choice: answer, note: notes[mood], again: 'Ask again', celebrate: mood === 'yes' });
+      modeIdle();
+    }
+    return {
+      play: ask,
+      busy: () => asking,
+      refresh: paintQ,
+      onQuestion: paintQ,
+      unmount() { dead = true; },
+    };
+  },
+};
+
+/* ================= wiring ================= */
+load(ORDER);
+
+ui.presetRow.replaceChildren(...PRESETS.map(p => el('button', { class: 'preset', type: 'button', onclick: () => loadPreset(p) }, p.label)));
+ui.question.addEventListener('input', () => {
+  state.question = ui.question.value; markEdited(); save();
+  if (current && current.onQuestion) current.onQuestion();
+});
+ui.addForm.addEventListener('submit', e => {
+  e.preventDefault();
+  if (addOption(ui.newOpt.value)) ui.newOpt.value = '';
+  ui.newOpt.focus();
+});
+ui.shuffleBtn.addEventListener('click', () => { state.options = shuffle(state.options); markEdited(); renderRack(); optionsChanged(); });
+armButton(ui.clearBtn, 'Tap again to clear', () => { state.options = []; markEdited(); hideSlip(); renderRack(); optionsChanged(); ui.newOpt.focus(); });
+
+function paintSound() { ui.soundBtn.textContent = state.muted ? 'Sound off' : 'Sound on'; ui.soundBtn.setAttribute('aria-pressed', String(!state.muted)); }
+ui.soundBtn.addEventListener('click', () => { state.muted = !state.muted; paintSound(); save(); if (!state.muted) sound.soft(); });
+
+ui.ledgerBtn.addEventListener('click', openLedger);
+ui.ledgerClose.addEventListener('click', closeLedger);
+ui.scrim.addEventListener('click', closeLedger);
+armButton(ui.ledgerClear, 'Tap again to clear', () => { state.history = []; save(); renderLedger(); ui.ledgerClose.focus(); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !ui.ledger.hidden) { closeLedger(); return; }
+  if (e.key !== ' ' || e.repeat || !ui.ledger.hidden) return;
+  const a = document.activeElement;
+  if (a && a !== document.body && a.closest('input, textarea, select, button, a, [contenteditable]')) return;
+  if (!current) return;
+  const fn = 'primary' in current ? current.primary : current.play;
+  if (fn) { e.preventDefault(); fn(); }
+});
+
+renderRack();
+renderChips();
+paintSound();
+renderLedger();
+mount();
+})();
+</script>
+</body>
+</html>
